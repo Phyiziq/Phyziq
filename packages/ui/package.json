@@ -1,0 +1,20 @@
+{
+  "name": "@phyziq/ui",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/react": "^18.3.12"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-native": "0.76.5"
+  }
+}

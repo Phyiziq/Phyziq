@@ -1,0 +1,458 @@
+// PHYZIQ Platform — Main Database Schema
+// PostgreSQL 16 + pgvector extension
+// Requirements: 1.2, 1.5, 2.1, 3.1, 4.1, 5.10, 6.5, 7.1, 9.4, 11.3, 12.1
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ---------------------------------------------------------------------------
+// GYM OWNERS — B2B accounts (no FK from gym_partners yet, defined below)
+// ---------------------------------------------------------------------------
+model GymOwner {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phoneNumber   String       @unique @map("phone_number")
+  email         String       @unique
+  businessName  String       @map("business_name")
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  gymPartners   GymPartner[]
+
+  @@map("gym_owners")
+}
+
+// ---------------------------------------------------------------------------
+// GYM PARTNERS
+// ---------------------------------------------------------------------------
+model GymPartner {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  location      String
+  city          String
+  qrCodeToken   String       @unique @map("qr_code_token")
+  equipmentList Json         @default("[]") @map("equipment_list")
+  ownerId       String?      @map("owner_id") @db.Uuid
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  owner              GymOwner?                 @relation(fields: [ownerId], references: [id])
+  members            Member[]
+  gymChallenges      GymChallenge[]
+  gymAnalytics       GymAnalyticsSnapshot[]
+
+  @@map("gym_partners")
+}
+
+// ---------------------------------------------------------------------------
+// MEMBERS
+// height_cm CHECK (50–300), weight_kg CHECK (20–500), sex enum
+// ---------------------------------------------------------------------------
+model Member {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phoneNumber        String    @unique @map("phone_number")
+  firstName          String    @map("first_name")
+  lastName           String    @map("last_name")
+  dateOfBirth        DateTime  @map("date_of_birth") @db.Date
+  sex                String?   // CHECK enforced via migration SQL: ('male','female','other','prefer_not_to_say')
+  heightCm           Decimal?  @map("height_cm") @db.Decimal(5, 1) // CHECK 50–300
+  weightKg           Decimal?  @map("weight_kg") @db.Decimal(5, 1) // CHECK 20–500
+  fitnessGoal        String    @map("fitness_goal")
+  activityLevel      String    @map("activity_level")
+  gymId              String?   @map("gym_id") @db.Uuid
+  subscriptionStatus String    @default("free_preview") @map("subscription_status")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  gym                GymPartner?           @relation(fields: [gymId], references: [id])
+  adaptivePlans      AdaptivePlan[]
+  planSessions       PlanSession[]
+  workoutLogs        WorkoutLog[]
+  mealLogs           MealLog[]
+  paymentTransactions PaymentTransaction[] @relation("MemberPayments")
+  coach              Coach?
+  coachBookings      CoachBooking[]
+  consentRecords     ConsentRecord[]
+  planExports        PlanExport[]
+  challengeEnrolments ChallengeEnrolment[]
+  complianceEvents   ComplianceEvent[]
+  planModificationLogs PlanModificationLog[]
+
+  @@map("members")
+}
+
+// ---------------------------------------------------------------------------
+// ADAPTIVE PLANS
+// plan_type CHECK: ('workout','nutrition','combined')
+// ---------------------------------------------------------------------------
+model AdaptivePlan {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId       String    @map("member_id") @db.Uuid
+  planType       String?   @map("plan_type") // CHECK ('workout','nutrition','combined')
+  status         String    @default("active")
+  isPaid         Boolean   @default(false) @map("is_paid")
+  weekNumber     Int       @map("week_number")
+  generatedAt    DateTime  @default(now()) @map("generated_at") @db.Timestamptz()
+  lastAdaptedAt  DateTime? @map("last_adapted_at") @db.Timestamptz()
+  planData       Json      @map("plan_data")
+  confidenceAvg  Decimal?  @map("confidence_avg") @db.Decimal(4, 1)
+  version        Int       @default(1)
+
+  member         Member          @relation(fields: [memberId], references: [id])
+  planSessions   PlanSession[]
+  planExports    PlanExport[]
+  paymentTransactions PaymentTransaction[] @relation("PlanPayments")
+  planModificationLogs PlanModificationLog[]
+
+  @@map("adaptive_plans")
+}
+
+// ---------------------------------------------------------------------------
+// PLAN SESSIONS
+// ---------------------------------------------------------------------------
+model PlanSession {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId         String    @map("plan_id") @db.Uuid
+  memberId       String    @map("member_id") @db.Uuid
+  scheduledDate  DateTime  @map("scheduled_date") @db.Date
+  sessionType    String    @map("session_type")
+  status         String    @default("scheduled")
+  sessionData    Json      @map("session_data")
+  adaptationNote String?   @map("adaptation_note")
+
+  plan        AdaptivePlan  @relation(fields: [planId], references: [id])
+  member      Member        @relation(fields: [memberId], references: [id])
+  workoutLogs WorkoutLog[]
+
+  @@map("plan_sessions")
+}
+
+// ---------------------------------------------------------------------------
+// EXERCISES (with pgvector embedding for swap similarity search)
+// HNSW index added in migration SQL
+// ---------------------------------------------------------------------------
+model Exercise {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  muscleGroups      String[] @map("muscle_groups")
+  equipmentRequired String[] @map("equipment_required")
+  movementPattern   String?  @map("movement_pattern")
+  // embedding VECTOR(1536) — added via raw SQL in migration (Prisma Unsupported)
+  embedding         Unsupported("vector(1536)")?
+
+  workoutLogs WorkoutLog[]
+
+  @@map("exercises")
+}
+
+// ---------------------------------------------------------------------------
+// WORKOUT LOGS
+// recovery_score CHECK (1–10)
+// ---------------------------------------------------------------------------
+model WorkoutLog {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId      String    @map("member_id") @db.Uuid
+  sessionId     String?   @map("session_id") @db.Uuid
+  exerciseId    String?   @map("exercise_id") @db.Uuid
+  loggedAt      DateTime  @default(now()) @map("logged_at") @db.Timestamptz()
+  sets          Json
+  recoveryScore Int?      @map("recovery_score") // CHECK (1–10)
+  synced        Boolean   @default(true)
+  offlineId     String?   @map("offline_id")
+
+  member    Member       @relation(fields: [memberId], references: [id])
+  session   PlanSession? @relation(fields: [sessionId], references: [id])
+  exercise  Exercise?    @relation(fields: [exerciseId], references: [id])
+
+  @@map("workout_logs")
+}
+
+// ---------------------------------------------------------------------------
+// FOOD ITEMS (with pgvector embedding for similarity search)
+// HNSW index added in migration SQL
+// ---------------------------------------------------------------------------
+model FoodItem {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  nameSwahili      String?  @map("name_swahili")
+  caloriesPer100g  Decimal? @map("calories_per_100g") @db.Decimal(6, 1)
+  proteinG         Decimal? @map("protein_g") @db.Decimal(5, 1)
+  carbsG           Decimal? @map("carbs_g") @db.Decimal(5, 1)
+  fatG             Decimal? @map("fat_g") @db.Decimal(5, 1)
+  fibreG           Decimal? @map("fibre_g") @db.Decimal(5, 1)
+  glycaemicIndex   Int?     @map("glycaemic_index")
+  sodiumMg         Decimal? @map("sodium_mg") @db.Decimal(7, 1)
+  isLocalKenyan    Boolean  @default(false) @map("is_local_kenyan")
+  // embedding VECTOR(1536) — added via raw SQL in migration (Prisma Unsupported)
+  embedding        Unsupported("vector(1536)")?
+
+  @@map("food_items")
+}
+
+// ---------------------------------------------------------------------------
+// MEAL LOGS
+// ---------------------------------------------------------------------------
+model MealLog {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId     String    @map("member_id") @db.Uuid
+  loggedAt     DateTime  @default(now()) @map("logged_at") @db.Timestamptz()
+  mealType     String?   @map("meal_type")
+  foodItems    Json      @map("food_items")
+  logSource    String    @default("manual") @map("log_source")
+  photoUrl     String?   @map("photo_url")
+  confidenceAvg Decimal? @map("confidence_avg") @db.Decimal(4, 1)
+  corrections  Json?
+  synced       Boolean   @default(true)
+  offlineId    String?   @map("offline_id")
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@map("meal_logs")
+}
+
+// ---------------------------------------------------------------------------
+// COACHES
+// ---------------------------------------------------------------------------
+model Coach {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId            String?   @unique @map("member_id") @db.Uuid
+  specialisation      String[]
+  credentials         Json?
+  isVerified          Boolean   @default(false) @map("is_verified")
+  verificationDocUrl  String?   @map("verification_doc_url")
+  ratingAvg           Decimal?  @map("rating_avg") @db.Decimal(3, 1)
+  sessionFeeKes       Decimal?  @map("session_fee_kes") @db.Decimal(8, 2)
+  cancellationPolicy  Json?     @map("cancellation_policy")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  member              Member?          @relation(fields: [memberId], references: [id])
+  coachBookings       CoachBooking[]
+  paymentTransactions PaymentTransaction[] @relation("CoachPayments")
+
+  @@map("coaches")
+}
+
+// ---------------------------------------------------------------------------
+// PAYMENT TRANSACTIONS
+// ---------------------------------------------------------------------------
+model PaymentTransaction {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId        String?   @map("member_id") @db.Uuid
+  coachId         String?   @map("coach_id") @db.Uuid
+  amountKes       Decimal   @map("amount_kes") @db.Decimal(10, 2)
+  currency        String    @default("KES")
+  paymentMethod   String    @map("payment_method")
+  paymentRail     String    @map("payment_rail")
+  status          String    @default("pending")
+  idempotencyKey  String    @unique @map("idempotency_key")
+  gatewayRef      String?   @map("gateway_ref")
+  gatewayAmount   Decimal?  @map("gateway_amount") @db.Decimal(10, 2)
+  initiatedAt     DateTime  @default(now()) @map("initiated_at") @db.Timestamptz()
+  confirmedAt     DateTime? @map("confirmed_at") @db.Timestamptz()
+  planId          String?   @map("plan_id") @db.Uuid
+  transactionType String    @map("transaction_type")
+
+  member        Member?      @relation("MemberPayments", fields: [memberId], references: [id])
+  coach         Coach?       @relation("CoachPayments", fields: [coachId], references: [id])
+  plan          AdaptivePlan? @relation("PlanPayments", fields: [planId], references: [id])
+  coachBookings CoachBooking[]
+
+  @@map("payment_transactions")
+}
+
+// ---------------------------------------------------------------------------
+// PAYMENT AUDIT LOG (append-only, BIGSERIAL PK)
+// Requirements: 6.5
+//
+// APPEND-ONLY INVARIANT: No UPDATE or DELETE operations are permitted on this
+// table. All writes must go through insertPaymentAuditLog() in src/lib/audit.ts.
+// The app layer enforces this; there is intentionally no update method exposed.
+// ---------------------------------------------------------------------------
+model PaymentAuditLog {
+  id            BigInt    @id @default(autoincrement())
+  transactionId String    @map("transaction_id") @db.Uuid
+  /// Lifecycle event type: 'initiated' | 'callback_received' | 'status_update'
+  eventType     String    @map("event_type")
+  eventData     Json      @map("event_data")
+  gatewayRef    String?   @map("gateway_ref")
+  utcTimestamp  DateTime  @default(now()) @map("utc_timestamp") @db.Timestamptz()
+
+  @@map("payment_audit_log")
+}
+
+// ---------------------------------------------------------------------------
+// COACH BOOKINGS
+// commission_pct CHECK (10–15)
+// ---------------------------------------------------------------------------
+model CoachBooking {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId        String    @map("member_id") @db.Uuid
+  coachId         String    @map("coach_id") @db.Uuid
+  scheduledAt     DateTime  @map("scheduled_at") @db.Timestamptz()
+  status          String    @default("pending")
+  sessionFeeKes   Decimal   @map("session_fee_kes") @db.Decimal(8, 2)
+  commissionPct   Decimal   @map("commission_pct") @db.Decimal(4, 2) // CHECK (10–15)
+  escrowReleased  Boolean   @default(false) @map("escrow_released")
+  paymentId       String?   @map("payment_id") @db.Uuid
+  cancellationAt  DateTime? @map("cancellation_at") @db.Timestamptz()
+  reviewSubmitted Boolean   @default(false) @map("review_submitted")
+
+  member  Member             @relation(fields: [memberId], references: [id])
+  coach   Coach              @relation(fields: [coachId], references: [id])
+  payment PaymentTransaction? @relation(fields: [paymentId], references: [id])
+
+  @@map("coach_bookings")
+}
+
+// ---------------------------------------------------------------------------
+// CONSENT RECORDS
+// consent_type CHECK: ('general','health_data','ai_training')
+// ---------------------------------------------------------------------------
+model ConsentRecord {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId    String    @map("member_id") @db.Uuid
+  consentType String    @map("consent_type") // CHECK ('general','health_data','ai_training')
+  granted     Boolean
+  grantedAt   DateTime  @default(now()) @map("granted_at") @db.Timestamptz()
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz()
+  ipAddress   String?   @map("ip_address") // stored as TEXT; INET enforced in migration SQL
+  userAgent   String?   @map("user_agent")
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@map("consent_records")
+}
+
+// ---------------------------------------------------------------------------
+// PLAN EXPORTS
+// format CHECK: ('pdf','docx')
+// ---------------------------------------------------------------------------
+model PlanExport {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId        String    @map("plan_id") @db.Uuid
+  memberId      String    @map("member_id") @db.Uuid
+  format        String    // CHECK ('pdf','docx')
+  s3Key         String    @map("s3_key")
+  fileSizeBytes Int?      @map("file_size_bytes")
+  generatedAt   DateTime  @default(now()) @map("generated_at") @db.Timestamptz()
+  // expires_at default NOW() + 90 days — set via raw SQL in migration
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz()
+  isValid       Boolean   @default(true) @map("is_valid")
+
+  plan   AdaptivePlan @relation(fields: [planId], references: [id])
+  member Member       @relation(fields: [memberId], references: [id])
+
+  @@map("plan_exports")
+}
+
+// ---------------------------------------------------------------------------
+// GYM CHALLENGES
+// ---------------------------------------------------------------------------
+model GymChallenge {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gymId         String    @map("gym_id") @db.Uuid
+  name          String
+  targetMetric  String    @map("target_metric")
+  startDate     DateTime  @map("start_date") @db.Date
+  endDate       DateTime  @map("end_date") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  gym          GymPartner           @relation(fields: [gymId], references: [id])
+  enrolments   ChallengeEnrolment[]
+
+  @@map("gym_challenges")
+}
+
+// ---------------------------------------------------------------------------
+// CHALLENGE ENROLMENTS (composite PK)
+// ---------------------------------------------------------------------------
+model ChallengeEnrolment {
+  challengeId String   @map("challenge_id") @db.Uuid
+  memberId    String   @map("member_id") @db.Uuid
+  consented   Boolean
+  enrolledAt  DateTime @default(now()) @map("enrolled_at") @db.Timestamptz()
+
+  challenge GymChallenge @relation(fields: [challengeId], references: [id])
+  member    Member        @relation(fields: [memberId], references: [id])
+
+  @@id([challengeId, memberId])
+  @@map("challenge_enrolments")
+}
+
+// ---------------------------------------------------------------------------
+// GYM ANALYTICS SNAPSHOTS (pre-aggregated, hourly cron)
+// ---------------------------------------------------------------------------
+model GymAnalyticsSnapshot {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gymId                String    @map("gym_id") @db.Uuid
+  snapshotAt           DateTime  @map("snapshot_at") @db.Timestamptz()
+  totalActiveMembers   Int?      @map("total_active_members")
+  avgPlanCompletionPct Decimal?  @map("avg_plan_completion_pct") @db.Decimal(5, 2)
+  avgWeeklySessions    Decimal?  @map("avg_weekly_sessions") @db.Decimal(5, 2)
+  topExercises         Json?     @map("top_exercises")   // [{exercise_name, count}] top 5
+  sessionHeatmap       Json?     @map("session_heatmap") // {day: {hour: count}}
+  atRiskMemberCount    Int?      @map("at_risk_member_count")
+  atRiskMemberIds      String[]  @map("at_risk_member_ids") @db.Uuid // UUIDs only, no PII
+
+  gym GymPartner @relation(fields: [gymId], references: [id])
+
+  @@map("gym_analytics_snapshots")
+}
+
+// ---------------------------------------------------------------------------
+// COMPLIANCE EVENTS (ODPC audit log, BIGSERIAL PK)
+// Requirements: 11.5, 11.7
+//
+// APPEND-ONLY INVARIANT: No UPDATE or DELETE operations are permitted on this
+// table. All writes must go through insertComplianceEvent() in src/lib/audit.ts.
+//
+// event_type CHECK constraint (enforced in migration SQL):
+//   ('consent_granted', 'consent_revoked', 'data_deleted', 'data_breach')
+//
+// reportedAt: populated for data_breach events — records when ODPC was notified
+//   (Requirement 11.7: breach must be reported within 72h of detection)
+// memberId:   NULL is valid for data_breach events not tied to a single member
+// ---------------------------------------------------------------------------
+model ComplianceEvent {
+  id          BigInt    @id @default(autoincrement())
+  /// NULL for platform-wide breach events not tied to a single member
+  memberId    String?   @map("member_id") @db.Uuid
+  /// CHECK (event_type IN ('consent_granted','consent_revoked','data_deleted','data_breach'))
+  /// — enforced in migration SQL
+  eventType   String    @map("event_type")
+  /// JSONB payload; default '{}' set in migration SQL
+  eventData   Json      @default("{}") @map("event_data")
+  occurredAt  DateTime  @default(now()) @map("occurred_at") @db.Timestamptz()
+  /// For data_breach events: timestamp when ODPC was notified (Req 11.7)
+  reportedAt  DateTime? @map("reported_at") @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  member Member? @relation(fields: [memberId], references: [id])
+
+  @@map("compliance_events")
+}
+
+// ---------------------------------------------------------------------------
+// PLAN MODIFICATION LOG (AI Coach plan changes)
+// ---------------------------------------------------------------------------
+model PlanModificationLog {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId            String    @map("plan_id") @db.Uuid
+  memberId          String    @map("member_id") @db.Uuid
+  modificationType  String    @map("modification_type")
+  triggeredByQuery  String?   @map("triggered_by_query")
+  modifiedAt        DateTime  @default(now()) @map("modified_at") @db.Timestamptz()
+  beforeData        Json?     @map("before_data")
+  afterData         Json?     @map("after_data")
+
+  plan   AdaptivePlan @relation(fields: [planId], references: [id])
+  member Member       @relation(fields: [memberId], references: [id])
+
+  @@map("plan_modification_log")
+}

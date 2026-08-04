@@ -1,0 +1,40 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Scaffold monorepo, tooling, and shared type package": [
+      {
+        "executionId": "39bdd2ed-ab39-4be7-929e-a4fe63d25327",
+        "chatSessionId": "sess_f020a821-8de6-4a4c-9d10-a386a269b2f0",
+        "timestamp": 1785792629650
+      }
+    ],
+    "1.1 Initialise pnpm workspace with Turborepo and create `apps/api`, `apps/web`, `apps/mobile`, `packages/shared`, `packages/ui`, `packages/ai-engine` directory structure": [
+      {
+        "executionId": "39bdd2ed-ab39-4be7-929e-a4fe63d25327",
+        "chatSessionId": "sess_f020a821-8de6-4a4c-9d10-a386a269b2f0",
+        "timestamp": 1785793540052
+      }
+    ],
+    "1.2 Define all shared TypeScript types in `packages/shared`": [
+      {
+        "executionId": "39bdd2ed-ab39-4be7-929e-a4fe63d25327",
+        "chatSessionId": "sess_f020a821-8de6-4a4c-9d10-a386a269b2f0",
+        "timestamp": 1785793544080
+      }
+    ],
+    "2.1 Write and apply Prisma migrations for all main DB tables": [
+      {
+        "executionId": "1156f74f-62ed-4512-ba4d-1febad047f0b",
+        "chatSessionId": "sess_a8cc20af-da26-456b-9ec8-3654009c2526",
+        "timestamp": 1785811822304
+      }
+    ],
+    "2.2 Write and apply migrations for payment audit log and compliance events tables": [
+      {
+        "executionId": "1156f74f-62ed-4512-ba4d-1febad047f0b",
+        "chatSessionId": "sess_a8cc20af-da26-456b-9ec8-3654009c2526",
+        "timestamp": 1785811826884
+      }
+    ]
+  }
+}
