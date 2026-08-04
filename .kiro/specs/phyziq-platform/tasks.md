@@ -39,15 +39,15 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 6.5**
 
 
-- [ ] 3. Database schema — Health_Data_Store (isolated PostgreSQL instance)
-  - [ ] 3.1 Provision separate PostgreSQL instance and apply Health_Data_Store migrations
+- [x] 3. Database schema — Health_Data_Store (isolated PostgreSQL instance)
+  - [x] 3.1 Provision separate PostgreSQL instance and apply Health_Data_Store migrations
     - Tables: `ncd_profiles`, `biometric_logs`, `health_data_access_log`
     - Create `health_data_svc` PostgreSQL role with `CONNECT`, `SELECT`, `INSERT`, `UPDATE`, `DELETE` on health tables only
     - Create `app_svc` role for main DB with no access to health tables
     - Configure separate connection string in environment secrets
     - _Requirements: 1.7, 11.2_
 
-  - [ ] 3.2 Implement `HealthDataRepository` class in `apps/api/src/modules/consent`
+  - [x] 3.2 Implement `HealthDataRepository` class in `apps/api/src/modules/consent`
     - All health DB access must go through this class; enforce via ESLint `import/no-restricted-paths` rule
     - Methods: `findNcdProfile`, `upsertNcdProfile`, `insertBiometricLog`, `deleteAllHealthData`, `logAccess`
     - Every method calls `logAccess()` internally before returning
@@ -62,7 +62,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 11.6**
 
 
-- [ ] 4. API foundation — Express app, middleware, and Zod validation
+- [-] 4. API foundation — Express app, middleware, and Zod validation
   - [ ] 4.1 Bootstrap `apps/api` Express application with TypeScript
     - Configure `zod` request validation middleware applied globally before all route handlers
     - Configure `compression` middleware (gzip + Brotli, threshold 10KB)
