@@ -1,5 +1,9 @@
--- PHYZIQ Platform — Task 2.2 Migration
--- Payment Audit Log hardening + Compliance Events table alignment
+-- Migration: 20260101000001_harden_audit_and_compliance_events
+-- PHYZIQ Platform — Harden append-only audit tables and fix compliance_events schema
+-- Changes:
+--   payment_audit_log : add transaction_id index (Property 29)
+--   compliance_events : recreate with event_type CHECK, occurred_at, reported_at,
+--                       append-only REVOKE, and three targeted partial indexes
 -- Requirements: 6.5, 11.5, 11.7
 
 -- ---------------------------------------------------------------------------

@@ -1,6 +1,13 @@
--- PHYZIQ Platform — Initial Schema Migration
+-- Migration: 20260101000000_create_main_schema
+-- PHYZIQ Platform — Create full main database schema
+-- Tables: gym_owners, gym_partners, members, adaptive_plans, plan_sessions,
+--         exercises, workout_logs, food_items, meal_logs, coaches,
+--         payment_transactions, payment_audit_log, coach_bookings,
+--         consent_records, plan_exports, gym_challenges, challenge_enrolments,
+--         gym_analytics_snapshots, compliance_events, plan_modification_log
+-- Extensions: pgvector (vector)
+-- Indexes: HNSW on exercises.embedding + food_items.embedding, all query indexes
 -- Requirements: 1.2, 1.5, 2.1, 3.1, 4.1, 5.10, 6.5, 7.1, 9.4, 11.3, 12.1
--- PostgreSQL 16 + pgvector
 
 -- Enable pgvector extension
 CREATE EXTENSION IF NOT EXISTS vector;

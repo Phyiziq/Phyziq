@@ -6,7 +6,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 
 ## Tasks
 
-- [-] 1. Scaffold monorepo, tooling, and shared type package
+- [x] 1. Scaffold monorepo, tooling, and shared type package
   - [x] 1.1 Initialise pnpm workspace with Turborepo and create `apps/api`, `apps/web`, `apps/mobile`, `packages/shared`, `packages/ui`, `packages/ai-engine` directory structure
     - Configure `turbo.json` with `build`, `test`, `lint`, `type-check` pipelines
     - Add root `package.json` with pnpm workspace glob
@@ -17,19 +17,19 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - Export API response envelope type `ApiResponse<T>` and error type `ApiError`
     - _Requirements: 1–12 (used by all modules)_
 
-  - [ ] 1.3 Write property test: registration validation completeness
+  - [ ]* 1.3 Write property test: registration validation completeness
     - **Property 2: Registration Validation Completeness**
     - **Validates: Requirements 1.2, 1.5**
 
 
-- [~] 2. Database schema — main database (PostgreSQL 16)
-  - [-] 2.1 Write and apply Prisma migrations for all main DB tables
+- [x] 2. Database schema — main database (PostgreSQL 16)
+  - [x] 2.1 Write and apply Prisma migrations for all main DB tables
     - Tables: `members`, `gym_partners`, `gym_owners`, `adaptive_plans`, `plan_sessions`, `workout_logs`, `meal_logs`, `food_items`, `exercises`, `payment_transactions`, `payment_audit_log`, `coaches`, `coach_bookings`, `consent_records`, `plan_exports`, `gym_challenges`, `challenge_enrolments`, `gym_analytics_snapshots`, `compliance_events`, `plan_modification_log`
     - Enable `pgvector` extension; add HNSW indexes on `food_items.embedding` and `exercises.embedding`
     - Add `CHECK` constraints matching design schema (height 50–300, weight 20–500, commission_pct 10–15, sex enum, format enum, consent_type enum)
     - _Requirements: 1.2, 1.5, 2.1, 3.1, 4.1, 5.10, 6.5, 7.1, 9.4, 11.3, 12.1_
 
-  - [-] 2.2 Write and apply migrations for payment audit log and compliance events tables
+  - [x] 2.2 Write and apply migrations for payment audit log and compliance events tables
     - `payment_audit_log`: append-only enforced at app layer (INSERT only, no UPDATE)
     - `compliance_events`: tracks consent_granted, consent_revoked, data_deleted, data_breach events
     - _Requirements: 6.5, 11.5, 11.7_

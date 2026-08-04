@@ -1,11 +1,21 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "1.3 Write property test: registration validation completeness": {
+      "status": "passed",
+      "lastRunTimestamp": 1785815515605
+    }
+  },
   "executionHistory": {
     "1. Scaffold monorepo, tooling, and shared type package": [
       {
         "executionId": "39bdd2ed-ab39-4be7-929e-a4fe63d25327",
         "chatSessionId": "sess_f020a821-8de6-4a4c-9d10-a386a269b2f0",
         "timestamp": 1785792629650
+      },
+      {
+        "executionId": "36efc1e0-4b7f-4701-9c88-ef0ac33fa0a7",
+        "chatSessionId": "sess_a8cc20af-da26-456b-9ec8-3654009c2526",
+        "timestamp": 1785815538531
       }
     ],
     "1.1 Initialise pnpm workspace with Turborepo and create `apps/api`, `apps/web`, `apps/mobile`, `packages/shared`, `packages/ui`, `packages/ai-engine` directory structure": [
@@ -34,6 +44,18 @@
         "executionId": "1156f74f-62ed-4512-ba4d-1febad047f0b",
         "chatSessionId": "sess_a8cc20af-da26-456b-9ec8-3654009c2526",
         "timestamp": 1785811826884
+      }
+    ],
+    "1.3 Write property test: registration validation completeness": [
+      {
+        "executionId": "36efc1e0-4b7f-4701-9c88-ef0ac33fa0a7",
+        "chatSessionId": "sess_a8cc20af-da26-456b-9ec8-3654009c2526",
+        "timestamp": 1785814969818
+      },
+      {
+        "executionId": "36efc1e0-4b7f-4701-9c88-ef0ac33fa0a7",
+        "chatSessionId": "sess_a8cc20af-da26-456b-9ec8-3654009c2526",
+        "timestamp": 1785815537185
       }
     ]
   }
