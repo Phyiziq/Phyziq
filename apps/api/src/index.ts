@@ -1,5 +1,5 @@
 // PHYZIQ API entry point
-import { createApp } from './app.js';
+import { createApp } from './app';
 
 const PORT = parseInt(process.env['PORT'] ?? '3001', 10);
 
