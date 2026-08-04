@@ -2,7 +2,9 @@
 
 ## Overview
 
-PHYZIQ is an AI-powered adaptive fitness platform targeting gym members in Nairobi, Kenya, with a global-architecture foundation. The platform combines three tightly integrated products: an adaptive AI coaching loop, a gym-partner B2B analytics layer, and a human coach marketplace — all under a single M-Pesa-native, offline-first, Kenya-DPA-compliant product.
+PHYZIQ is an AI-powered adaptive fitness platform targeting gym members in Nairobi, Kenya, with a global-architecture foundation. The platform combines four tightly integrated products: an adaptive AI coaching loop, a gym-partner B2B analytics layer, a human coach marketplace, and a **product marketplace** — all under a single M-Pesa-native, offline-first, Kenya-DPA-compliant product.
+
+The **product marketplace** extends the platform beyond coaching into commerce. Members can browse and purchase: supplement products (protein, vitamins, pre-workout), gym apparel and outfits, and gym equipment (dumbbells, resistance bands, benches, etc.). Products are fulfilled by third-party sellers; PHYZIQ takes a commission on each sale. The same M-Pesa payment rail used for subscriptions and coach bookings powers product purchases. The product marketplace is separate from the coach marketplace — coaches are a service, products are physical goods.
 
 ### Core Design Principles
 
@@ -61,10 +63,10 @@ graph TB
         CV["Perception Layer\n(Food photo recognition,\nVoice transcription)"]
     end
 
-    subgraph Data_Tier["Data Tier (PostgreSQL 16)"]
-        MAIN_DB["Main DB\n(users, plans, logs,\npayments, gyms, coaches)"]
-        HEALTH_DB["Health_Data_Store\n(separate partition,\nown encryption keys,\nrestricted service access)"]
-        VECTOR_DB["pgvector Extension\n(exercise embeddings,\nfood item embeddings,\nRAG context)"]
+    subgraph Data_Tier["Data Tier (Supabase — PostgreSQL 16 + pgvector)"]
+        MAIN_DB["Main DB\n(Supabase project #1 —\nPostgreSQL 16 + pgvector pre-installed)\n(users, plans, logs,\npayments, gyms, coaches)"]
+        HEALTH_DB["Health_Data_Store\n(Supabase project #2 — separate project,\nown credentials + RLS,\nphysically isolated per Kenya DPA)"]
+        VECTOR_DB["pgvector Extension\n(pre-installed on Supabase —\nexercise embeddings,\nfood item embeddings,\nRAG context)"]
         REDIS["Redis\n(session cache, rate limits,\nidempotency keys,\njob queues)"]
         S3["Object Storage (S3/R2)\n(PDF/DOCX exports,\nfood photos,\nQR code images)"]
     end
@@ -119,18 +121,23 @@ graph TB
 ```
 phyziq/
 ├── apps/
-│   ├── web/                    # Next.js 14 — member web + gym owner dashboard
+│   ├── web/                    # Next.js 14 — member web + gym owner dashboard → deployed to Vercel
 │   ├── mobile/                 # React Native / Expo
-│   └── api/                    # Node.js / TypeScript backend
+│   └── api/                    # Node.js / TypeScript backend → deployed to Railway/Render
 ├── packages/
 │   ├── shared/                 # Types, API client, constants (no platform deps)
 │   ├── ui/                     # Shared React component library (NativeWind)
 │   └── ai-engine/              # AI orchestration logic (importable in api/)
-├── infra/                      # Terraform / deployment config
+├── infra/                      # Vercel config (vercel.json), Railway/Render deployment config,
+│                               # environment variable templates (.env.example)
 └── turbo.json                  # Turborepo build pipeline
 ```
 
 Tooling: **pnpm workspaces + Turborepo** for build caching and task orchestration. `packages/shared` is the single source of truth for API response types, preventing drift between web, mobile, and backend.
+
+Deployment targets:
+- `apps/web` → **Vercel** (zero-config Next.js 14 deploy; preview deployments on every PR)
+- `apps/api` → **Railway or Render** (long-running Node.js process; supports WebSockets and Redis job queues; not compatible with Vercel serverless)
 
 ---
 
@@ -553,6 +560,39 @@ CREATE TABLE health_data_access_log (
 
 **Access policy**: All queries to the Health_Data_Store must go through the `HealthDataRepository` class in the `consent` module. Direct SQL access by non-approved services is prevented by PostgreSQL role-based access control: only the `health_data_svc` role (assigned to `ai-engine` and `consent-module` services) has `CONNECT` privilege on the health DB.
 
+---
+
+### Database Infrastructure (Supabase)
+
+**Main Database** — Supabase project #1
+- PostgreSQL 16 with pgvector pre-installed (no manual `CREATE EXTENSION` needed)
+- Connection via Supabase connection pooler URL (PgBouncer, transaction mode) for API at runtime; direct URL for Prisma migrations
+- Environment variables:
+  - `DATABASE_URL` — pooler URL used by Prisma at runtime (already set in `apps/api/.env`)
+  - `DIRECT_URL` — direct connection URL used by `prisma migrate deploy` and `prisma db push`
+- Migrations managed via Prisma: `prisma migrate deploy` runs against `DIRECT_URL` during CI/CD
+- Row Level Security (RLS) disabled on tables accessed only by the service role (API uses `service_role` key, not `anon`)
+
+**Health_Data_Store** — Supabase project #2 (separate project, separate credentials)
+- Physically isolated from main DB: different project, different connection string, different API keys — satisfies the Kenya DPA physical isolation requirement (Req 1.7, 11.2)
+- The `health_data_svc` PostgreSQL role requirement is satisfied by using the Supabase `service_role` of project #2 exclusively for health data operations — no other service has this key
+- `HealthDataRepository` class connects using `HEALTH_DB_URL` (project #2 direct URL)
+- Environment variables:
+  - `HEALTH_DB_URL` — direct connection URL for Supabase project #2
+- Migrations applied separately: `prisma migrate deploy --schema=prisma/health-schema.prisma` against `HEALTH_DB_URL`, or via Supabase SQL editor for the health project
+
+**pgvector**: Pre-installed on all Supabase projects. The HNSW index creation (`CREATE INDEX USING hnsw`) works without additional setup — no manual `CREATE EXTENSION vector` step required.
+
+**Prisma dual-URL configuration** (required for Supabase connection pooling):
+```prisma
+// prisma/schema.prisma
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")   // PgBouncer pooler URL
+  directUrl = env("DIRECT_URL")     // Direct connection for migrations
+}
+```
+
 ### Offline Cache Schema (SQLite via Expo SQLite)
 
 The mobile client uses **Expo SQLite** for offline storage. Schema mirrors the server models with two additional columns: `synced_at` (null when pending sync) and `offline_id` (UUID generated client-side for dedup).
@@ -937,10 +977,15 @@ The platform must register with the ODPC before processing health data for more 
 
 ### Encryption
 
-- **Data at rest**: AES-256 via PostgreSQL Transparent Data Encryption (TDE) or disk-level encryption (provider-managed). Health_Data_Store uses a separate KMS key.
+- **Data at rest**: AES-256 via PostgreSQL Transparent Data Encryption (TDE) or disk-level encryption (Supabase-managed). Health_Data_Store (Supabase project #2) uses a separate set of project credentials and encryption at rest is managed by Supabase independently.
 - **Data in transit**: TLS 1.3 enforced at the Cloudflare edge. HSTS headers set. Internal service-to-service calls also TLS.
-- **Secrets management**: All API keys (Paystack, Anthropic, Twilio) stored in AWS Secrets Manager (or equivalent). Never in environment variables or code. Rotated quarterly.
-- **Payment credentials**: Paystack secret keys encrypted at application layer before storage. Never logged.
+- **Secrets management**:
+  - **Web secrets** (Next.js public/private env vars): **Vercel Environment Variables** — set in Vercel project dashboard, injected at build time and runtime. Never hardcoded.
+  - **API secrets** (Paystack, Anthropic, Twilio, JWT secret, Redis URL): **Railway/Render environment variables** — injected at runtime into the Node.js process. Never hardcoded.
+  - **Database credentials**: Supabase project settings → Connection String section for each project (`DATABASE_URL`, `DIRECT_URL`, `HEALTH_DB_URL`). Never hardcoded or committed to source control.
+  - All secrets rotated quarterly.
+  - `.env.example` documents all required variables including `DIRECT_URL` and `HEALTH_DB_URL`.
+- **Payment credentials**: Paystack secret keys set as Railway/Render environment variables. Never logged.
 
 ### API Security
 
@@ -950,19 +995,23 @@ The platform must register with the ODPC before processing health data for more 
 - **JWT hardening**: `HS256` signing with a 512-bit secret. Access tokens are short-lived (24h). Refresh tokens stored in `HttpOnly`, `SameSite=Strict` cookies on web. Mobile uses Expo SecureStore.
 - **CORS**: Strict allowlist — only `phyziq.com` and localhost in development. No wildcard origins.
 
-### Health Data Access Control (PostgreSQL Roles)
+### Health Data Access Control (Supabase project boundary + PostgreSQL Roles)
+
+The `health_data_svc` role isolation required by the design is satisfied at two levels on Supabase:
+
+1. **Project boundary**: The Health_Data_Store is a completely separate Supabase project. The `service_role` key for project #2 is only stored in the `HEALTH_DB_URL` environment variable and only accessible to the `HealthDataRepository` class. No other service or module holds this credential.
+2. **PostgreSQL role enforcement within project #2**: The same role-based access control from the original design is applied within the health Supabase project:
 
 ```sql
+-- Applied within Supabase project #2 (Health_Data_Store)
 -- Only this role can access health tables
 CREATE ROLE health_data_svc;
-GRANT CONNECT ON DATABASE health_db TO health_data_svc;
+GRANT CONNECT ON DATABASE postgres TO health_data_svc;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ncd_profiles, biometric_logs TO health_data_svc;
 GRANT INSERT ON health_data_access_log TO health_data_svc;
 
--- Main app role — cannot touch health tables
-CREATE ROLE app_svc;
-GRANT CONNECT ON DATABASE main_db TO app_svc;
--- (no grant on health_data_store tables)
+-- Main app role (project #1) — has no connection to project #2 at all
+-- The Supabase project boundary enforces this at the network and credential level
 ```
 
 ---
@@ -978,18 +1027,32 @@ flowchart LR
     C --> D[Type check: tsc --noEmit]
     D --> E[Lint: ESLint + Prettier]
     E --> F[Unit + Property tests: Vitest]
-    F --> G[Integration tests: against test DB]
+    F --> G[Integration tests: against Supabase test project]
     G --> H[Build: Next.js + API bundle]
     H --> I{Branch = main?}
     I -- No --> J[PR checks pass]
-    I -- Yes --> K[Deploy to Staging: Railway/Render]
-    K --> L[Smoke tests: Playwright E2E]
-    L --> M[Deploy to Production: approval gate]
-    M --> N[Database migrations: prisma migrate deploy]
-    N --> O[Health check: /api/health 200]
+    I -- Yes --> K1[Deploy web to Vercel: vercel deploy --prod]
+    I -- Yes --> K2[Deploy API to Railway/Render: deploy hook or CLI]
+    K1 --> L[Smoke tests: Playwright E2E against staging]
+    K2 --> L
+    L --> M[Run DB migrations: prisma migrate deploy --env production]
+    M --> N[Health check: /api/health 200]
 ```
 
-**Branch strategy**: `main` → production. Feature branches → staging on merge. Database migrations are run as a separate step with a rollback script prepared before each deploy.
+**Deployment targets**:
+- `apps/web` uses `vercel.json` with `framework: "nextjs"` — zero-config deploy via `vercel deploy --prod --project=phyziq-web`
+- `apps/api` is deployed as a standard Node.js process on Railway/Render with `pnpm start` command; a `railway.json` (or `render.yaml`) in `apps/api/` defines the start command and health check path
+- Vercel preview deployments are created automatically on each PR for `apps/web`
+
+**Database migrations**:
+- Migrations run as a post-deploy step against the Supabase `DIRECT_URL` (not the pooler URL) via `prisma migrate deploy`
+- Health_Data_Store migrations run separately: `prisma migrate deploy --schema=prisma/health-schema.prisma` against `HEALTH_DB_URL`
+
+**Environment variables**:
+- Web (Vercel): set in Vercel project dashboard — Next.js public (`NEXT_PUBLIC_*`) and private env vars
+- API (Railway/Render): set in Railway/Render dashboard — all server secrets (`PAYSTACK_SECRET_KEY`, `ANTHROPIC_API_KEY`, `JWT_SECRET`, `DATABASE_URL`, `DIRECT_URL`, `HEALTH_DB_URL`, etc.)
+
+**Branch strategy**: `main` → production. Feature branches → PR with Vercel preview for web. Database migrations are run as a separate step with a rollback script prepared before each deploy.
 
 **Mobile deployments**: Expo EAS Build for iOS and Android. Over-the-air (OTA) updates via Expo Updates for JavaScript-only changes — no app store review cycle.
 

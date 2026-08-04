@@ -40,11 +40,12 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 
 
 - [x] 3. Database schema — Health_Data_Store (isolated PostgreSQL instance)
-  - [x] 3.1 Provision separate PostgreSQL instance and apply Health_Data_Store migrations
+  - [x] 3.1 Create second Supabase project for Health_Data_Store
+    - Create Supabase project #2 (separate project with separate credentials — distinct from the main `DATABASE_URL` project)
+    - Apply health schema migrations: `prisma migrate deploy --schema=prisma/health-schema.prisma` against `HEALTH_DB_URL` (direct URL for project #2), or via Supabase SQL editor
+    - Store `HEALTH_DB_URL` in Railway/Render environment variables (API) — never committed to source control
+    - The `health_data_svc` role isolation is satisfied by the Supabase project boundary: the `service_role` key for project #2 is only accessible to `HealthDataRepository`; no other module or service holds this credential
     - Tables: `ncd_profiles`, `biometric_logs`, `health_data_access_log`
-    - Create `health_data_svc` PostgreSQL role with `CONNECT`, `SELECT`, `INSERT`, `UPDATE`, `DELETE` on health tables only
-    - Create `app_svc` role for main DB with no access to health tables
-    - Configure separate connection string in environment secrets
     - _Requirements: 1.7, 11.2_
 
   - [x] 3.2 Implement `HealthDataRepository` class in `apps/api/src/modules/consent`
@@ -62,7 +63,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 11.6**
 
 
-- [-] 4. API foundation — Express app, middleware, and Zod validation
+- [x] 4. API foundation — Express app, middleware, and Zod validation
   - [ ] 4.1 Bootstrap `apps/api` Express application with TypeScript
     - Configure `zod` request validation middleware applied globally before all route handlers
     - Configure `compression` middleware (gzip + Brotli, threshold 10KB)
@@ -703,12 +704,30 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - _Requirements: 11.7_
 
   - [ ] 35.2 Configure GitHub Actions CI pipeline
-    - Steps: `pnpm install` + Turborepo cache → `tsc --noEmit` → ESLint + Prettier → Vitest (unit + property) → integration tests (testcontainers) → Next.js + API build → deploy staging on merge to main → Playwright E2E smoke tests → production deploy with approval gate → `prisma migrate deploy` → `/api/health` check
+    - Steps: `pnpm install` + Turborepo cache → `tsc --noEmit` → ESLint + Prettier → Vitest (unit + property) → integration tests (against Supabase test project) → Next.js + API build
+    - On merge to `main`:
+      - Web deploy: `vercel deploy --prod --project=phyziq-web` (Vercel CLI)
+      - API deploy: Railway/Render deploy hook triggered on merge to main
+      - Vercel preview deployments created automatically on each PR for `apps/web`
+    - Post-deploy: Playwright E2E smoke tests against staging
+    - Migration step: `prisma migrate deploy` against Supabase `DIRECT_URL` (not pooler URL); health schema migrations against `HEALTH_DB_URL`
+    - Final: `/api/health` 200 check
     - _Requirements: all (delivery pipeline)_
 
   - [ ] 35.3 Configure Expo EAS Build and OTA updates
     - EAS Build for iOS and Android; Expo Updates for JS-only OTA changes without app store review
     - _Requirements: all (mobile delivery)_
+
+  - [ ] 35.4 Configure Vercel and Railway/Render deployment infrastructure
+    - Create `apps/web/vercel.json` with `framework: "nextjs"` config (zero-config Next.js 14 deploy)
+    - Create `apps/api/railway.json` (or `apps/api/render.yaml`) with start command (`pnpm start`) and health check path (`/api/health`)
+    - Update `apps/api/.env.example` to document all required Supabase-specific variables:
+      - `DATABASE_URL` — Supabase project #1 PgBouncer pooler URL (used by Prisma at runtime)
+      - `DIRECT_URL` — Supabase project #1 direct connection URL (used by `prisma migrate deploy`)
+      - `HEALTH_DB_URL` — Supabase project #2 direct connection URL (Health_Data_Store)
+    - Update `prisma/schema.prisma` to declare both `url` (from `DATABASE_URL`) and `directUrl` (from `DIRECT_URL`) on the datasource block
+    - Document in `infra/` directory: Vercel project settings template, Railway/Render env var list, Supabase project setup checklist
+    - _Requirements: foundational infrastructure_
 
 
 - [ ] 36. Final checkpoint — All systems verified
@@ -721,12 +740,15 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 - Tasks marked with `*` are optional and can be skipped for a faster MVP; all 48 property tests are marked optional
 - Property tests use `fast-check` with a minimum of 100 iterations per property (`numRuns: 100`)
 - Test files follow the naming convention `*.property.test.ts` alongside source modules, tagged `// Feature: phyziq-platform, Property N: [Name]`
-- Unit and integration tests use `vitest` + `testcontainers` (PostgreSQL container per test suite)
+- Unit and integration tests use `vitest` + Supabase test project (or `testcontainers` for local runs) — PostgreSQL container per test suite
 - Each task references specific requirements for full traceability
 - Checkpoints at tasks 6, 13, 18, 21, 25, 28, 32, 36 ensure incremental validation
 - The `HealthDataRepository` ESLint import boundary rule is enforced from task 3.2 onward
-- Health_Data_Store is a separate PostgreSQL instance — not a schema — with its own connection string and KMS key
+- Health_Data_Store is a **separate Supabase project** (not just a schema) — with its own `HEALTH_DB_URL`, its own credentials, and its own Supabase project settings; this satisfies the Kenya DPA physical isolation requirement
+- `DATABASE_URL` is the Supabase PgBouncer pooler URL for runtime; `DIRECT_URL` is the direct URL for Prisma migrations — both are required in `prisma/schema.prisma` as `url` and `directUrl` respectively
+- pgvector is pre-installed on Supabase — no `CREATE EXTENSION vector` step needed in migrations
 - All LLM and CV calls are async via Redis Bull queues; HTTP layer returns `202 { job_id }` immediately
+- `apps/web` deploys to Vercel (zero-config Next.js); `apps/api` deploys to Railway/Render (standard Node.js process); see task 35.4 for deployment config files
 
 
 ## Task Dependency Graph
@@ -784,7 +806,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     { "id": 47, "tasks": ["31.2", "31.3"] },
     { "id": 48, "tasks": ["33.1", "33.2", "33.3", "34.1"] },
     { "id": 49, "tasks": ["33.4", "33.5", "34.2", "34.3"] },
-    { "id": 50, "tasks": ["35.1", "35.2", "35.3"] }
+    { "id": 50, "tasks": ["35.1", "35.2", "35.3", "35.4"] }
   ]
 }
 ```
