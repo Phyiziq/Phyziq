@@ -10,7 +10,8 @@
     "incremental": true,
     "allowJs": true,
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "lib": ["ES2022", "dom", "dom.iterable"]
   },
   "include": [
     "next-env.d.ts",

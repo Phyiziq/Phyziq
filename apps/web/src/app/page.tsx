@@ -1,727 +1,1923 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Dumbbell,
-  Utensils,
-  Heart,
-  Star,
-  ShoppingCart,
-  CheckCircle,
-  WifiOff,
-  RotateCcw,
-  ChevronRight,
-  Menu,
-  X,
-  Zap,
-  TrendingUp,
-  Users,
-  Package,
-  MessageSquare,
-  Smartphone,
-} from 'lucide-react'
-import clsx from 'clsx'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Shared helpers ─────────────────────────────────────────────────────────
 
-type DayStatus = 'completed' | 'rebuilt' | 'scheduled' | 'rest'
-type MarketplaceTab = 'coaches' | 'products'
-type MPesaState = 'waiting' | 'success' | 'failed'
-type ProductCategory = 'supplement' | 'apparel' | 'equipment'
-
-interface Coach {
-  id: number
-  name: string
-  specialisation: string
-  rating: number
-  reviews: number
-  priceKes: number
-  verified: boolean
-  initials: string
-  color: string
-}
-
-interface Product {
-  id: number
-  name: string
-  category: ProductCategory
-  priceKes: number
-  bgColor: string
-  icon: React.ReactNode
-}
-
-// ─── Static / Mock Data ───────────────────────────────────────────────────────
-
-const days: { label: string; status: DayStatus }[] = [
-  { label: 'Mon', status: 'completed' },
-  { label: 'Tue', status: 'rebuilt' },
-  { label: 'Wed', status: 'scheduled' },
-  { label: 'Thu', status: 'scheduled' },
-  { label: 'Fri', status: 'scheduled' },
-  { label: 'Sat', status: 'rest' },
-  { label: 'Sun', status: 'scheduled' },
-]
-
-const coaches: Coach[] = [
-  {
-    id: 1,
-    name: 'Amina Wanjiru',
-    specialisation: 'Personal Training',
-    rating: 4.9,
-    reviews: 124,
-    priceKes: 1500,
-    verified: true,
-    initials: 'AW',
-    color: 'bg-violet-500',
-  },
-  {
-    id: 2,
-    name: 'Brian Ochieng',
-    specialisation: 'Dietetics',
-    rating: 4.7,
-    reviews: 87,
-    priceKes: 1200,
-    verified: true,
-    initials: 'BO',
-    color: 'bg-sky-500',
-  },
-  {
-    id: 3,
-    name: 'Cynthia Kamau',
-    specialisation: 'Physiotherapy',
-    rating: 4.8,
-    reviews: 56,
-    priceKes: 2000,
-    verified: false,
-    initials: 'CK',
-    color: 'bg-rose-500',
-  },
-]
-
-const products: Product[] = [
-  {
-    id: 1,
-    name: 'Whey Protein 1kg',
-    category: 'supplement',
-    priceKes: 4500,
-    bgColor: 'bg-amber-100',
-    icon: <Zap className="w-8 h-8 text-amber-600" />,
-  },
-  {
-    id: 2,
-    name: 'PHYZIQ Training Tee',
-    category: 'apparel',
-    priceKes: 1800,
-    bgColor: 'bg-brand-100',
-    icon: <Package className="w-8 h-8 text-brand-600" />,
-  },
-  {
-    id: 3,
-    name: 'Adjustable Dumbbells 20kg',
-    category: 'equipment',
-    priceKes: 12500,
-    bgColor: 'bg-slate-100',
-    icon: <Dumbbell className="w-8 h-8 text-slate-600" />,
-  },
-  {
-    id: 4,
-    name: 'Creatine Monohydrate',
-    category: 'supplement',
-    priceKes: 2200,
-    bgColor: 'bg-blue-100',
-    icon: <Zap className="w-8 h-8 text-blue-600" />,
-  },
-  {
-    id: 5,
-    name: 'Resistance Band Set',
-    category: 'equipment',
-    priceKes: 1400,
-    bgColor: 'bg-orange-100',
-    icon: <Dumbbell className="w-8 h-8 text-orange-600" />,
-  },
-  {
-    id: 6,
-    name: 'Compression Shorts',
-    category: 'apparel',
-    priceKes: 2400,
-    bgColor: 'bg-indigo-100',
-    icon: <Package className="w-8 h-8 text-indigo-600" />,
-  },
-]
-
-const categoryColors: Record<ProductCategory, string> = {
-  supplement: 'bg-amber-100 text-amber-700',
-  apparel: 'bg-brand-100 text-brand-700',
-  equipment: 'bg-slate-100 text-slate-700',
-}
-
-const dayStatusStyles: Record<DayStatus, string> = {
-  completed: 'bg-brand-500 text-white border-brand-500',
-  rebuilt: 'bg-amber-500 text-white border-amber-500',
-  scheduled: 'bg-white text-slate-600 border-slate-300',
-  rest: 'bg-slate-100 text-slate-400 border-slate-200',
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-function ConfidenceChip({ label, color }: { label: string; color: 'green' | 'blue' | 'amber' }) {
-  const colors = {
-    green: 'bg-brand-100 text-brand-700',
-    blue: 'bg-blue-100 text-blue-700',
-    amber: 'bg-amber-100 text-amber-700',
-  }
+/** Eyebrow label: IBM Plex Mono, 11px, uppercase, ls 0.12em, --ink-soft */
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <span className={clsx('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium', colors[color])}>
-      <span className={clsx('w-1.5 h-1.5 rounded-full', {
-        'bg-brand-500': color === 'green',
-        'bg-blue-500': color === 'blue',
-        'bg-amber-500': color === 'amber',
-      })} />
+    <p
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        fontWeight: 400,
+        textTransform: 'uppercase',
+        letterSpacing: '0.12em',
+        color: 'var(--ink-soft)',
+        marginBottom: 16,
+      }}
+    >
+      {children}
+    </p>
+  )
+}
+
+/** Confidence chip — trust (high) or accent (low) variant */
+function Chip({
+  label,
+  variant = 'trust',
+}: {
+  label: string
+  variant?: 'trust' | 'accent'
+}) {
+  const bg = variant === 'trust' ? 'var(--trust-soft)' : 'var(--accent-soft)'
+  const color = variant === 'trust' ? 'var(--trust)' : 'var(--accent)'
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        background: bg,
+        color,
+        borderRadius: 999,
+        padding: '4px 10px 4px 8px',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        fontWeight: 400,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: color,
+          flexShrink: 0,
+        }}
+      />
       {label}
     </span>
   )
 }
 
-function StarRating({ rating }: { rating: number }) {
+/** Primary pill button */
+function BtnPrimary({
+  children,
+  style,
+}: {
+  children: React.ReactNode
+  style?: React.CSSProperties
+}) {
   return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={clsx('w-3.5 h-3.5', i <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200')}
-        />
-      ))}
-    </div>
+    <button
+      style={{
+        background: 'var(--accent)',
+        color: 'var(--accent-ink)',
+        border: 'none',
+        borderRadius: 999,
+        padding: '11px 22px',
+        fontFamily: 'var(--font-body)',
+        fontSize: 14.5,
+        fontWeight: 600,
+        transition: 'background 0.15s',
+        cursor: 'pointer',
+        ...style,
+      }}
+      onMouseEnter={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-hover)'
+      }}
+      onMouseLeave={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--accent)'
+      }}
+    >
+      {children}
+    </button>
   )
 }
 
-// ─── Section: Navbar ──────────────────────────────────────────────────────────
-
-function Navbar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobileOpen: (v: boolean) => void }) {
-  const links = ['Today', 'Plans', 'Coach', 'Marketplace', 'Progress', 'Account']
+/** Ghost button */
+function BtnGhost({
+  children,
+  style,
+}: {
+  children: React.ReactNode
+  style?: React.CSSProperties
+}) {
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <span className="text-xl font-bold text-brand-600 tracking-tight">PHYZIQ</span>
-          <div className="hidden md:flex items-center gap-6">
-            {links.map((l) => (
-              <a key={l} href="#" className="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">
-                {l}
-              </a>
-            ))}
-          </div>
-          <div className="hidden md:flex items-center gap-3">
-            <button className="text-sm font-medium text-slate-600 hover:text-slate-900">Log in</button>
-            <button className="text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg transition-colors">
-              Get Started
-            </button>
-          </div>
-          <button className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-50" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+    <button
+      style={{
+        background: 'transparent',
+        color: 'var(--ink)',
+        border: '1px solid var(--line)',
+        borderRadius: 999,
+        padding: '11px 22px',
+        fontFamily: 'var(--font-body)',
+        fontSize: 14.5,
+        fontWeight: 500,
+        transition: 'border-color 0.15s',
+        cursor: 'pointer',
+        ...style,
+      }}
+      onMouseEnter={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--ink)'
+      }}
+      onMouseLeave={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+// ─── SECTION A: Navbar ───────────────────────────────────────────────────────
+
+function Navbar() {
+  const [open, setOpen] = useState(false)
+  const navLinks = ['How it works', 'For gyms', 'Marketplace', 'Pricing']
+
+  return (
+    <nav
+      style={{
+        background: 'var(--bg-raised)',
+        borderBottom: '1px solid var(--line)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          padding: '0 32px',
+          height: 60,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path
+              d="M2 12 Q5 4 9 9 Q13 14 16 6"
+              stroke="var(--accent)"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 18,
+              fontWeight: 600,
+              color: 'var(--ink)',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            PHYZIQ
+          </span>
         </div>
-      </div>
-      {mobileOpen && (
-        <div className="md:hidden border-t border-slate-100 px-4 py-3 flex flex-col gap-3 bg-white">
-          {links.map((l) => (
-            <a key={l} href="#" className="text-sm font-medium text-slate-700 py-1">
+
+        {/* Desktop nav links */}
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 28 }}
+          className="hide-mobile"
+        >
+          {navLinks.map((l) => (
+            <a
+              key={l}
+              href="#"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                fontWeight: 500,
+                color: 'var(--ink-soft)',
+                textDecoration: 'none',
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                ;(e.currentTarget as HTMLAnchorElement).style.color = 'var(--ink)'
+              }}
+              onMouseLeave={(e) => {
+                ;(e.currentTarget as HTMLAnchorElement).style.color = 'var(--ink-soft)'
+              }}
+            >
               {l}
             </a>
           ))}
-          <button className="mt-2 w-full bg-brand-500 text-white text-sm font-semibold py-2 rounded-lg">
-            Get Started
-          </button>
+        </div>
+
+        {/* Desktop CTA */}
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 12 }}
+          className="hide-mobile"
+        >
+          <a
+            href="#"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 14,
+              color: 'var(--ink)',
+              textDecoration: 'none',
+            }}
+          >
+            Log in
+          </a>
+          <BtnPrimary style={{ padding: '8px 18px', fontSize: 14 }}>
+            Get your plan
+          </BtnPrimary>
+        </div>
+
+        {/* Hamburger */}
+        <button
+          className="show-mobile"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 6,
+            color: 'var(--ink)',
+            display: 'none',
+          }}
+        >
+          {open ? (
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <line x1="4" y1="4" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="18" y1="4" x2="4" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <line x1="3" y1="6" x2="19" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="3" y1="11" x2="19" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="3" y1="16" x2="19" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile dropdown */}
+      {open && (
+        <div
+          style={{
+            background: 'var(--bg-raised)',
+            borderTop: '1px solid var(--line)',
+            padding: '16px 32px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 14,
+          }}
+        >
+          {navLinks.map((l) => (
+            <a
+              key={l}
+              href="#"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 15,
+                fontWeight: 500,
+                color: 'var(--ink)',
+                textDecoration: 'none',
+              }}
+            >
+              {l}
+            </a>
+          ))}
+          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <a
+              href="#"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                color: 'var(--ink-soft)',
+                textDecoration: 'none',
+              }}
+            >
+              Log in
+            </a>
+            <BtnPrimary style={{ padding: '8px 18px', fontSize: 13 }}>
+              Get your plan
+            </BtnPrimary>
+          </div>
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 860px) {
+          .hide-mobile { display: none !important; }
+          .show-mobile { display: flex !important; }
+        }
+      `}</style>
     </nav>
   )
 }
 
-// ─── Section: Hero ────────────────────────────────────────────────────────────
+// ─── SECTION B: Hero ────────────────────────────────────────────────────────
+
+/** The signature adaptive path SVG */
+function AdaptivePathSVG() {
+  return (
+    <svg
+      viewBox="0 0 400 160"
+      width="100%"
+      height="160"
+      aria-label="Adaptive plan path visualisation"
+      style={{ display: 'block' }}
+    >
+      {/* Dashed original plan */}
+      <path
+        d="M 20,120 Q 100,40 200,80 Q 280,110 380,60"
+        stroke="#C8C0B0"
+        strokeWidth="2"
+        strokeDasharray="6 4"
+        fill="none"
+      />
+      {/* Solid rerouted accent path */}
+      <path
+        d="M 20,120 Q 100,40 180,100 Q 220,115 260,90 Q 320,60 380,50"
+        stroke="#B8542E"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Missed dot — dark */}
+      <circle cx="180" cy="100" r="5" fill="#241F1A" />
+      {/* Confirmed dot — teal */}
+      <circle cx="260" cy="90" r="5" fill="#2E6B5E" />
+      {/* Start dot */}
+      <circle cx="20" cy="120" r="4" fill="#B8542E" />
+      {/* End dot */}
+      <circle cx="380" cy="50" r="4" fill="#B8542E" />
+
+      {/* Labels */}
+      <text
+        x="14"
+        y="138"
+        fontFamily="IBM Plex Mono, monospace"
+        fontSize="10"
+        fill="#5C5449"
+      >
+        Mon
+      </text>
+      <text
+        x="148"
+        y="118"
+        fontFamily="IBM Plex Mono, monospace"
+        fontSize="10"
+        fill="#5C5449"
+      >
+        Missed — Wed
+      </text>
+      <text
+        x="238"
+        y="82"
+        fontFamily="IBM Plex Mono, monospace"
+        fontSize="10"
+        fill="#2E6B5E"
+      >
+        Rebuilt · Thu
+      </text>
+      {/* Dashed label */}
+      <text
+        x="290"
+        y="42"
+        fontFamily="IBM Plex Mono, monospace"
+        fontSize="9"
+        fill="#A09890"
+      >
+        original plan
+      </text>
+    </svg>
+  )
+}
 
 function Hero() {
   return (
-    <section className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-20 lg:py-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/30 rounded-full px-3 py-1 mb-6">
-              <Zap className="w-3.5 h-3.5 text-brand-400" />
-              <span className="text-xs font-medium text-brand-300">AI-Powered Adaptive Coaching</span>
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-4">
-              Your plan.{' '}
-              <span className="text-brand-400">Built for how you</span>{' '}
-              actually live.
-            </h1>
-            <p className="text-slate-300 text-lg mb-8 leading-relaxed">
-              PHYZIQ adapts your workout and nutrition plan in real time — around missed sessions,
-              travel, recovery, and life. Powered by AI, grounded in Kenyan context.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <button className="bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2">
-                Start Free Preview <ChevronRight className="w-4 h-4" />
-              </button>
-              <button className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-6 py-3 rounded-xl transition-colors">
-                See how it works
-              </button>
-            </div>
-            <div className="mt-8 flex items-center gap-6 text-sm text-slate-400">
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-400" /> M-Pesa native</span>
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-400" /> Offline-first</span>
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-400" /> Kenya DPA compliant</span>
-            </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="bg-brand-500/20 p-1.5 rounded-lg"><Dumbbell className="w-4 h-4 text-brand-400" /></div>
-                  <span className="text-sm font-semibold">Today&apos;s Workout</span>
-                </div>
-                <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">↻ Rebuilt</span>
-              </div>
-              <p className="text-slate-300 text-sm mb-1">Chest + Triceps — 4 exercises</p>
-              <p className="text-xs text-slate-500 mb-3">Adapted after Monday&apos;s missed session</p>
-              <div className="flex gap-2">
-                <ConfidenceChip label="High confidence" color="green" />
-                <ConfidenceChip label="Estimated" color="blue" />
-              </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="bg-blue-500/20 p-1.5 rounded-lg"><Utensils className="w-4 h-4 text-blue-400" /></div>
-                  <span className="text-sm font-semibold">Today&apos;s Nutrition</span>
-                </div>
-                <span className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-medium">NCD-aware</span>
-              </div>
-              <p className="text-slate-300 text-sm mb-1">1,840 kcal · 3 meals planned</p>
-              <p className="text-xs text-slate-500 mb-3">Low-GI options prioritised</p>
-              <div className="flex gap-2">
-                <ConfidenceChip label="Confirmed" color="green" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Section: Today Dashboard ─────────────────────────────────────────────────
-
-function TodayDashboard() {
-  return (
-    <section className="py-16 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-1">Today&apos;s Dashboard</p>
-          <h2 className="text-2xl font-bold text-slate-900">Good morning, Alex</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Tuesday — Plan adapted after Monday&apos;s missed session</p>
-        </div>
-
-        {/* Offline banner */}
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3 mb-6">
-          <WifiOff className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium">Offline</span>
-          <span className="text-amber-700">— logged data will sync when connected</span>
-        </div>
-
-        {/* 3 summary cards */}
-        <div className="grid sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-brand-50 p-2 rounded-xl"><Dumbbell className="w-4 h-4 text-brand-600" /></div>
-                <span className="text-sm font-semibold text-slate-800">Workout</span>
-              </div>
-              <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                <RotateCcw className="w-3 h-3" /> Rebuilt
-              </span>
-            </div>
-            <p className="font-semibold text-slate-900 mb-0.5">Chest + Triceps</p>
-            <p className="text-sm text-slate-500">4 exercises · 45 min</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-blue-50 p-2 rounded-xl"><Utensils className="w-4 h-4 text-blue-600" /></div>
-                <span className="text-sm font-semibold text-slate-800">Meals</span>
-              </div>
-              <span className="text-xs bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium">NCD-aware</span>
-            </div>
-            <p className="font-semibold text-slate-900 mb-0.5">1,840 kcal</p>
-            <p className="text-sm text-slate-500">3 meals planned</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-rose-50 p-2 rounded-xl"><Heart className="w-4 h-4 text-rose-500" /></div>
-                <span className="text-sm font-semibold text-slate-800">Recovery</span>
-              </div>
-            </div>
-            <p className="font-semibold text-brand-600 text-xl mb-0.5">7.5 <span className="text-sm text-slate-400 font-normal">/ 10</span></p>
-            <p className="text-sm text-slate-500">Good to train today</p>
+    <section
+      style={{
+        background: 'var(--bg)',
+        padding: '80px 0 80px',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          padding: '0 32px',
+          display: 'grid',
+          gridTemplateColumns: '1.05fr 0.95fr',
+          gap: 56,
+          alignItems: 'center',
+        }}
+        className="hero-grid"
+      >
+        {/* Left column */}
+        <div>
+          <Eyebrow>— Built for how you actually live</Eyebrow>
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 56,
+              fontWeight: 600,
+              color: 'var(--ink)',
+              letterSpacing: '-0.01em',
+              lineHeight: 1.12,
+              margin: '0 0 20px',
+            }}
+            className="hero-h1"
+          >
+            A fitness plan that{' '}
+            <span style={{ color: 'var(--accent)' }}>adjusts</span> when your
+            week doesn&apos;t cooperate.
+          </h1>
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 16,
+              color: 'var(--ink-soft)',
+              marginBottom: 32,
+              maxWidth: 480,
+              lineHeight: 1.65,
+            }}
+          >
+            PHYZIQ generates your workout and nutrition plan, then rebuilds it
+            around missed sessions,{' '}
+            <span style={{ color: 'var(--accent)' }}>night shifts</span>, and
+            real life — not the other way around.
+          </p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <BtnPrimary>Get your plan</BtnPrimary>
+            <BtnGhost>See how it works</BtnGhost>
           </div>
         </div>
 
-        {/* Confidence chips row */}
-        <div className="flex flex-wrap gap-2">
-          <ConfidenceChip label="High confidence" color="green" />
-          <ConfidenceChip label="Estimated" color="blue" />
-          <ConfidenceChip label="Confirmed" color="green" />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Section: Weekly Plan Navigator ──────────────────────────────────────────
-
-function WeeklyPlan() {
-  const [selected, setSelected] = useState(1) // Tue
-
-  return (
-    <section className="py-10 bg-white border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Weekly Plan</p>
-        <div className="flex flex-wrap gap-2">
-          {days.map((day, i) => (
-            <button
-              key={day.label}
-              onClick={() => setSelected(i)}
-              className={clsx(
-                'flex flex-col items-center px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all',
-                selected === i
-                  ? dayStatusStyles[day.status]
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300',
-                selected !== i && day.status === 'rest' && 'opacity-60',
-              )}
+        {/* Right column — demo card */}
+        <div
+          style={{
+            background: 'var(--bg-raised)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--radius-l)',
+            padding: 28,
+          }}
+        >
+          {/* Card header */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 16,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 15,
+                fontWeight: 600,
+                color: 'var(--ink)',
+              }}
             >
-              <span>{day.label}</span>
-              {day.status === 'completed' && <CheckCircle className="w-3 h-3 mt-0.5 opacity-80" />}
-              {day.status === 'rebuilt' && <RotateCcw className="w-3 h-3 mt-0.5 opacity-80" />}
-              {day.status === 'rest' && <span className="text-xs mt-0.5">Rest</span>}
-            </button>
+              This week&apos;s plan
+            </span>
+            <Chip label="Adapting live" variant="trust" />
+          </div>
+
+          {/* The adaptive path SVG */}
+          <AdaptivePathSVG />
+
+          {/* Explanation text */}
+          <div style={{ marginTop: 16 }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 13,
+                color: 'var(--ink)',
+                margin: '0 0 6px',
+                fontWeight: 600,
+              }}
+            >
+              You missed Wednesday&apos;s session.
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 13,
+                color: 'var(--ink-soft)',
+                margin: 0,
+                lineHeight: 1.6,
+              }}
+            >
+              Thursday&apos;s plan shifted from a heavy lower-body day to a{' '}
+              <span style={{ color: 'var(--accent)' }}>shorter</span>,{' '}
+              <span style={{ color: 'var(--accent)' }}>lower-fatigue</span>{' '}
+              session — volume preserved.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .hero-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+          .hero-h1 { font-size: 38px !important; }
+        }
+      `}</style>
+    </section>
+  )
+}
+
+// ─── SECTION C: Differentiator cards ────────────────────────────────────────
+
+const differCards = [
+  {
+    eyebrow: '01 · Adaptive, not static',
+    h3: 'Plans that respond to your data',
+    body: (
+      <>
+        Miss a session, sleep badly, or{' '}
+        <span style={{ color: 'var(--accent)' }}>hit a plateau</span> —{' '}
+        <span style={{ color: 'var(--accent)' }}>your</span> plan changes with{' '}
+        <span style={{ color: 'var(--accent)' }}>you</span>, instead of asking
+        you to keep up with{' '}
+        <span style={{ color: 'var(--accent)' }}>it</span>.
+      </>
+    ),
+  },
+  {
+    eyebrow: '02 · Aware, not generic',
+    h3: 'Nutrition that knows your risk factors',
+    body: (
+      <>
+        Family history of diabetes or hypertension shapes real substitutions —
+        safe, practical, never diagnostic.
+      </>
+    ),
+  },
+  {
+    eyebrow: '03 · Honest, not hidden',
+    h3: 'One price, shown up front',
+    body: (
+      <>
+        No add-on fees for nutrition, no surprise jump at client 20. What you
+        see is what you pay — for you and for your coach.
+      </>
+    ),
+  },
+]
+
+function DifferentiatorCards() {
+  return (
+    <section style={{ background: 'var(--bg)', padding: '80px 0' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+        <Eyebrow>— Why this, not another AI app</Eyebrow>
+        <h2
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 34,
+            fontWeight: 600,
+            color: 'var(--ink)',
+            letterSpacing: '-0.01em',
+            margin: '0 0 10px',
+          }}
+        >
+          Most fitness apps guess once. This one keeps adjusting.
+        </h2>
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 15,
+            color: 'var(--ink-soft)',
+            marginBottom: 48,
+          }}
+        >
+          Three things that make the difference between a plan you follow and one
+          you forget.
+        </p>
+
+        {/* Card grid — hairline dividers between cards */}
+        <div
+          className="differ-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr',
+            gap: 0,
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--radius-m)',
+            overflow: 'hidden',
+          }}
+        >
+          {differCards.map((card, i) => (
+            <div
+              key={i}
+              style={{
+                background: 'var(--bg-raised)',
+                padding: '28px 28px 32px',
+                borderRight: i < 2 ? '1px solid var(--line)' : 'none',
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  fontWeight: 400,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                  color: 'var(--ink-soft)',
+                  marginBottom: 14,
+                }}
+              >
+                {card.eyebrow}
+              </p>
+              <h3
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 19,
+                  fontWeight: 600,
+                  color: 'var(--ink)',
+                  letterSpacing: '-0.01em',
+                  margin: '0 0 12px',
+                }}
+              >
+                {card.h3}
+              </h3>
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  color: 'var(--ink-soft)',
+                  lineHeight: 1.65,
+                  margin: 0,
+                }}
+              >
+                {card.body}
+              </p>
+            </div>
           ))}
         </div>
-        <div className="mt-4 flex gap-4 text-xs text-slate-400">
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-brand-500 inline-block" /> Completed</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Rebuilt</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-white border border-slate-300 inline-block" /> Scheduled</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-200 inline-block" /> Rest</span>
-        </div>
       </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .differ-grid { grid-template-columns: 1fr !important; }
+          .differ-grid > div { border-right: none !important; border-bottom: 1px solid var(--line); }
+          .differ-grid > div:last-child { border-bottom: none; }
+        }
+      `}</style>
     </section>
   )
 }
 
-// ─── Section: Marketplace ─────────────────────────────────────────────────────
+// ─── SECTION D: For gym owners (dark card) ──────────────────────────────────
 
-function Marketplace() {
-  const [tab, setTab] = useState<MarketplaceTab>('coaches')
-  const [cartAdded, setCartAdded] = useState<Set<number>>(new Set())
-
-  function handleAddToCart(id: number) {
-    setCartAdded((prev) => new Set(prev).add(id))
-  }
-
+function ForGyms() {
   return (
-    <section className="py-16 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-6">
+    <section style={{ background: 'var(--bg)', padding: '0 0 80px' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+        <div
+          className="gyms-grid"
+          style={{
+            background: 'var(--ink)',
+            borderRadius: 'var(--radius-l)',
+            padding: '48px 52px',
+            display: 'grid',
+            gridTemplateColumns: '1.5fr 1fr',
+            gap: 48,
+            alignItems: 'center',
+          }}
+        >
+          {/* Left */}
           <div>
-            <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-1">Marketplace</p>
-            <h2 className="text-2xl font-bold text-slate-900">Coaches &amp; Products</h2>
-          </div>
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
-            <button
-              onClick={() => setTab('coaches')}
-              className={clsx('flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors', tab === 'coaches' ? 'bg-brand-500 text-white' : 'text-slate-600 hover:bg-slate-50')}
+            <p
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                fontWeight: 400,
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: '#A79E8F',
+                marginBottom: 16,
+              }}
             >
-              <Users className="w-4 h-4" /> Coaches
-            </button>
-            <button
-              onClick={() => setTab('products')}
-              className={clsx('flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors', tab === 'products' ? 'bg-brand-500 text-white' : 'text-slate-600 hover:bg-slate-50')}
+              — For gym owners
+            </p>
+            <h2
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 28,
+                fontWeight: 600,
+                color: '#F2EFE7',
+                letterSpacing: '-0.01em',
+                margin: '0 0 16px',
+                lineHeight: 1.25,
+              }}
             >
-              <Package className="w-4 h-4" /> Products
-            </button>
+              You already have the members. We help you keep them.
+            </h2>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 13.5,
+                color: '#A79E8F',
+                lineHeight: 1.65,
+                marginBottom: 28,
+              }}
+            >
+              Most gyms have{' '}
+              <span style={{ color: 'var(--accent)' }}>no idea</span> who&apos;s
+              about to stop showing up until they&apos;re gone. PHYZIQ gives you
+              that visibility — plus a tool your members{' '}
+              <span style={{ color: 'var(--accent)' }}>actually use</span> — at{' '}
+              <span style={{ color: 'var(--accent)' }}>no upfront cost</span> to
+              you.
+            </p>
+            <BtnPrimary>See the gym dashboard</BtnPrimary>
           </div>
-        </div>
 
-        {tab === 'coaches' && (
-          <div className="grid sm:grid-cols-3 gap-4">
-            {coaches.map((coach) => (
-              <div key={coach.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0', coach.color)}>
-                    {coach.initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 truncate">{coach.name}</p>
-                    <span className="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md mt-0.5">{coach.specialisation}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <StarRating rating={coach.rating} />
-                  <span className="text-xs text-slate-500">{coach.rating} ({coach.reviews})</span>
-                  {coach.verified && (
-                    <span className="ml-auto text-xs bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" /> Verified
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900">KES {coach.priceKes.toLocaleString()}<span className="text-xs text-slate-400 font-normal"> / session</span></span>
-                  <button className="text-sm font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1">
-                    Book <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'products' && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className={clsx('flex items-center justify-center h-36', product.bgColor)}>
-                  {product.icon}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="font-semibold text-slate-900 text-sm leading-snug">{product.name}</p>
-                    <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0', categoryColors[product.category])}>
-                      {product.category}
-                    </span>
-                  </div>
-                  <p className="font-bold text-slate-900 mb-3">KES {product.priceKes.toLocaleString()}</p>
-                  <button
-                    onClick={() => handleAddToCart(product.id)}
-                    className={clsx(
-                      'w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors',
-                      cartAdded.has(product.id)
-                        ? 'bg-brand-50 text-brand-700 border border-brand-200'
-                        : 'bg-brand-500 hover:bg-brand-600 text-white',
-                    )}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    {cartAdded.has(product.id) ? 'Added to cart' : 'Add to cart'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-// ─── Section: AI Chat Preview ─────────────────────────────────────────────────
-
-function AIChatPreview() {
-  return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-5 h-5 text-brand-500" />
-            <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">AI Coach</p>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Ask your coach anything</h2>
-          <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
-            <div className="flex items-center gap-2 bg-white border-b border-slate-100 px-4 py-3">
-              <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">PHYZIQ AI</p>
-                <p className="text-xs text-brand-500">Online</p>
-              </div>
-            </div>
-            <div className="p-4 space-y-3">
-              {/* User message */}
-              <div className="flex justify-end">
-                <div className="bg-brand-500 text-white text-sm rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-xs">
-                  I&apos;m travelling next week with no gym access. Can you adjust my plan?
-                </div>
-              </div>
-              {/* AI response */}
-              <div className="flex justify-start">
-                <div className="bg-white border border-slate-200 text-slate-800 text-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-sm shadow-sm">
-                  <p className="mb-2">Of course! I&apos;ll rebuild next week as a hotel room / bodyweight block. Here&apos;s what I&apos;m planning:</p>
-                  <ul className="text-xs text-slate-600 space-y-1 mb-3 list-disc list-inside">
-                    <li>Mon–Wed: bodyweight HIIT (no equipment)</li>
-                    <li>Thu: active recovery — stretch &amp; mobility</li>
-                    <li>Fri: hotel pool swim or walk (30 min)</li>
-                  </ul>
-                  <ConfidenceChip label="Estimated — adapt as you go" color="blue" />
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-slate-200 px-4 py-3 bg-white flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ask your AI coach…"
-                className="flex-1 text-sm text-slate-600 bg-transparent outline-none placeholder:text-slate-400"
-                readOnly
-              />
-              <button className="bg-brand-500 hover:bg-brand-600 text-white p-2 rounded-xl transition-colors">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Section: M-Pesa Payment Flow ────────────────────────────────────────────
-
-function MPesaPreview() {
-  const [mpesaState, setMpesaState] = useState<MPesaState>('waiting')
-
-  return (
-    <section className="py-16 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center gap-2 mb-2">
-            <Smartphone className="w-5 h-5 text-brand-500" />
-            <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">M-Pesa Payment</p>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Pay with M-Pesa</h2>
-
-          {/* State tabs */}
-          <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-4">
-            {(['waiting', 'success', 'failed'] as MPesaState[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => setMpesaState(s)}
-                className={clsx(
-                  'flex-1 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors',
-                  mpesaState === s ? 'bg-brand-500 text-white' : 'text-slate-500 hover:bg-slate-50',
-                )}
+          {/* Right — stats */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 32,
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 42,
+                  fontWeight: 600,
+                  color: '#F2EFE7',
+                  margin: '0 0 6px',
+                  letterSpacing: '-0.01em',
+                }}
               >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
-            {mpesaState === 'waiting' && (
-              <>
-                <div className="w-16 h-16 rounded-full border-4 border-brand-500 border-t-transparent animate-spin mx-auto mb-4" />
-                <p className="font-semibold text-slate-900 mb-1">Waiting for M-Pesa confirmation</p>
-                <p className="text-sm text-slate-500">Check your phone (+254 7XX XXX XXX) and enter your PIN to complete payment.</p>
-                <p className="text-xs text-slate-400 mt-3">KES 1,500 · PHYZIQ Monthly Plan</p>
-              </>
-            )}
-            {mpesaState === 'success' && (
-              <>
-                <div className="w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-9 h-9 text-brand-500" />
-                </div>
-                <p className="font-semibold text-slate-900 mb-1">Payment confirmed!</p>
-                <p className="text-sm text-slate-500">KES 1,500 received. Your plan is now active.</p>
-                <p className="text-xs text-slate-400 mt-3">M-Pesa ref: QJD8XK201B</p>
-              </>
-            )}
-            {mpesaState === 'failed' && (
-              <>
-                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                  <X className="w-9 h-9 text-red-500" />
-                </div>
-                <p className="font-semibold text-slate-900 mb-1">Payment failed</p>
-                <p className="text-sm text-slate-500">The M-Pesa request timed out or was declined. Please try again.</p>
-                <button className="mt-4 w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
-                  Retry Payment
-                </button>
-              </>
-            )}
+                8.5/10
+              </p>
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  fontWeight: 400,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: '#A79E8F',
+                  margin: 0,
+                }}
+              >
+                Reporting gap in most gym software
+              </p>
+            </div>
+            <div>
+              <p
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 42,
+                  fontWeight: 600,
+                  color: '#F2EFE7',
+                  margin: '0 0 6px',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                0%
+              </p>
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  fontWeight: 400,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: '#A79E8F',
+                  margin: 0,
+                }}
+              >
+                Upfront cost to partner gyms
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .gyms-grid { grid-template-columns: 1fr !important; padding: 36px 28px !important; }
+        }
+      `}</style>
     </section>
   )
 }
 
-// ─── Section: Stats Bar ───────────────────────────────────────────────────────
+// ─── SECTION E: Dashboard preview (dark mode) ───────────────────────────────
 
-function StatsBar() {
-  const stats = [
-    { value: '4/5', label: 'Sessions', icon: <Dumbbell className="w-5 h-5 text-brand-500" /> },
-    { value: '2', label: 'Adjusted', icon: <RotateCcw className="w-5 h-5 text-brand-500" /> },
-    { value: '92%', label: 'Plan Completion', icon: <TrendingUp className="w-5 h-5 text-brand-500" /> },
-    { value: '3.2kg', label: 'Lost', icon: <Heart className="w-5 h-5 text-brand-500" /> },
+/** Donut chart SVG — 4/5 sessions */
+function DonutChart() {
+  // r=32, circumference = 2π×32 ≈ 201.06
+  // 4/5 = 80% → filled arc = 201.06 × 0.8 ≈ 160.85, gap = 40.21
+  const r = 32
+  const cx = 40
+  const cy = 40
+  const circ = 2 * Math.PI * r
+  const filled = circ * 0.8
+  const gap = circ - filled
+  return (
+    <svg width="80" height="80" viewBox="0 0 80 80" aria-label="4 of 5 sessions completed">
+      {/* Track */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="#3A322A"
+        strokeWidth="6"
+      />
+      {/* Progress arc */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="#B8542E"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray={`${filled} ${gap}`}
+        transform={`rotate(-90 ${cx} ${cy})`}
+      />
+    </svg>
+  )
+}
+
+function DashboardPreview() {
+  return (
+    <section
+      style={{
+        background: '#1C1815',
+        padding: '60px 0',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          padding: '0 32px',
+        }}
+      >
+        {/* Section eyebrow */}
+        <p
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            color: '#A79E8F',
+            marginBottom: 8,
+          }}
+        >
+          — Dashboard preview
+        </p>
+        <h2
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 26,
+            fontWeight: 600,
+            color: '#F2EFE7',
+            letterSpacing: '-0.01em',
+            marginBottom: 24,
+          }}
+        >
+          Your plan, always in view
+        </h2>
+
+        {/* Dashboard shell */}
+        <div
+          className="dash-shell"
+          style={{
+            display: 'flex',
+            border: '1px solid #3A322A',
+            borderRadius: 'var(--radius-l)',
+            overflow: 'hidden',
+            minHeight: 520,
+          }}
+        >
+          {/* Sidebar */}
+          <aside
+            className="dash-sidebar"
+            style={{
+              width: 240,
+              background: '#191512',
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '24px 0',
+            }}
+          >
+            {/* Logo */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '0 20px 20px',
+                borderBottom: '1px solid #3A322A',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <path
+                  d="M2 12 Q5 4 9 9 Q13 14 16 6"
+                  stroke="#B8542E"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: '#F2EFE7',
+                }}
+              >
+                PHYZIQ
+              </span>
+            </div>
+
+            {/* Nav */}
+            <nav style={{ padding: '12px 0', flex: 1 }}>
+              {[
+                { label: 'Today', active: true },
+                { label: 'Plans' },
+                { label: 'Coach' },
+                { label: 'Marketplace' },
+                { label: 'Progress' },
+                { label: 'Account' },
+              ].map((item) => (
+                <a
+                  key={item.label}
+                  href="#"
+                  style={{
+                    display: 'block',
+                    padding: '9px 20px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    textDecoration: 'none',
+                    background: item.active ? '#2A231C' : 'transparent',
+                    color: item.active ? '#F2EFE7' : '#A79E8F',
+                    borderLeft: item.active ? '2px solid #B8542E' : '2px solid transparent',
+                    transition: 'color 0.15s, background 0.15s',
+                  }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+
+            {/* Gym info card */}
+            <div
+              style={{
+                margin: '0 12px',
+                background: '#241E17',
+                borderRadius: 'var(--radius-m)',
+                padding: '12px 14px',
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#F2EFE7',
+                  margin: '0 0 4px',
+                }}
+              >
+                SmartGym — Kilimani
+              </p>
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10.5,
+                  color: '#A79E8F',
+                  margin: 0,
+                  lineHeight: 1.5,
+                }}
+              >
+                Member since Jun 2026 · plan linked to your gym schedule
+              </p>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <div style={{ flex: 1, background: '#1C1815', padding: '24px 28px', minWidth: 0 }}>
+            {/* Header row */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+              }}
+            >
+              <div>
+                <h1
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 26,
+                    fontWeight: 600,
+                    color: '#F2EFE7',
+                    margin: '0 0 4px',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Good morning, Amina
+                </h1>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 13,
+                    color: '#A79E8F',
+                    margin: 0,
+                  }}
+                >
+                  Thursday — your plan shifted after Wednesday&apos;s missed session
+                </p>
+              </div>
+              {/* Avatar */}
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: 'var(--accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 16,
+                    fontWeight: 600,
+                    color: 'var(--accent-ink)',
+                  }}
+                >
+                  A
+                </span>
+              </div>
+            </div>
+
+            {/* Adaptive banner */}
+            <div
+              style={{
+                background: 'linear-gradient(to right, rgba(184,84,46,.14), transparent)',
+                border: '1px solid rgba(184,84,46,.3)',
+                borderRadius: 'var(--radius-s)',
+                padding: '10px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                marginBottom: 20,
+              }}
+            >
+              <Chip label="Adjusted" variant="trust" />
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 13,
+                  color: '#A79E8F',
+                  margin: 0,
+                  lineHeight: 1.55,
+                }}
+              >
+                Today&apos;s session is shorter than planned. Lower-body volume moved
+                to Saturday so you&apos;re not stacking fatigue two days running.
+              </p>
+            </div>
+
+            {/* Two-col card area */}
+            <div
+              className="dash-cards"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.5fr 1fr',
+                gap: 16,
+              }}
+            >
+              {/* LEFT: Today's plan + Recent logs */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Today's plan card */}
+                <div
+                  style={{
+                    background: '#262019',
+                    border: '1px solid #3A322A',
+                    borderRadius: 'var(--radius-m)',
+                    padding: '20px 20px 4px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 17,
+                        fontWeight: 600,
+                        color: '#F2EFE7',
+                      }}
+                    >
+                      Today&apos;s plan
+                    </span>
+                    <Chip label="High confidence" variant="trust" />
+                  </div>
+
+                  {[
+                    {
+                      dotFill: '#2E6B5E',
+                      title: 'Upper body — moderate',
+                      sub: '4 exercises · 32 min',
+                      time: '7:10 AM',
+                      chip: null,
+                      empty: false,
+                    },
+                    {
+                      dotFill: null,
+                      title: 'Lunch — grilled tilapia, sukuma wiki, ugali',
+                      sub: '612 kcal · balanced for your BP-aware plan',
+                      time: null,
+                      chip: { label: 'Estimated', variant: 'accent' as const },
+                      empty: true,
+                    },
+                    {
+                      dotFill: null,
+                      title: 'Evening walk — 20 min',
+                      sub: 'Recovery day, low intensity',
+                      time: '6:30 PM',
+                      chip: null,
+                      empty: true,
+                    },
+                  ].map((item, idx, arr) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '12px 0',
+                        borderBottom: idx < arr.length - 1 ? '1px solid #3A322A' : 'none',
+                      }}
+                    >
+                      {/* Dot */}
+                      {item.empty ? (
+                        <span
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            border: '1.5px solid #3A322A',
+                            flexShrink: 0,
+                          }}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            background: item.dotFill ?? 'transparent',
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: 14,
+                            fontWeight: 500,
+                            color: '#F2EFE7',
+                            margin: '0 0 2px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {item.title}
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 11,
+                            color: '#A79E8F',
+                            margin: 0,
+                          }}
+                        >
+                          {item.sub}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                        {item.chip && <Chip label={item.chip.label} variant={item.chip.variant} />}
+                        {item.time && (
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: 11,
+                              color: '#A79E8F',
+                            }}
+                          >
+                            {item.time}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recent logs card */}
+                <div
+                  style={{
+                    background: '#262019',
+                    border: '1px solid #3A322A',
+                    borderRadius: 'var(--radius-m)',
+                    padding: '20px 20px 4px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 17,
+                        fontWeight: 600,
+                        color: '#F2EFE7',
+                      }}
+                    >
+                      Recent logs
+                    </span>
+                    <a
+                      href="#"
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 13,
+                        color: 'var(--accent)',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      See all
+                    </a>
+                  </div>
+
+                  {[
+                    {
+                      title: 'Breakfast — mandazi & tea',
+                      sub: 'Photo-logged · tap to confirm estimate',
+                      chip: { label: 'Estimated', variant: 'accent' as const },
+                    },
+                    {
+                      title: 'Upper body — moderate',
+                      sub: 'Logged manually · all sets completed',
+                      chip: { label: 'Confirmed', variant: 'trust' as const },
+                    },
+                  ].map((item, idx, arr) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '12px 0',
+                        borderBottom: idx < arr.length - 1 ? '1px solid #3A322A' : 'none',
+                      }}
+                    >
+                      {/* Thumbnail */}
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 'var(--radius-s)',
+                          background: '#3A322A',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: 13.5,
+                            fontWeight: 500,
+                            color: '#F2EFE7',
+                            margin: '0 0 2px',
+                          }}
+                        >
+                          {item.title}
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 10.5,
+                            color: '#A79E8F',
+                            margin: 0,
+                          }}
+                        >
+                          {item.sub}
+                        </p>
+                      </div>
+                      <Chip label={item.chip.label} variant={item.chip.variant} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* RIGHT: This week + Coach message + Gym schedule */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* This week card */}
+                <div
+                  style={{
+                    background: '#262019',
+                    border: '1px solid #3A322A',
+                    borderRadius: 'var(--radius-m)',
+                    padding: '20px',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 17,
+                      fontWeight: 600,
+                      color: '#F2EFE7',
+                      margin: '0 0 16px',
+                    }}
+                  >
+                    This week
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <DonutChart />
+                    <div style={{ display: 'flex', gap: 20 }}>
+                      <div>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 24,
+                            fontWeight: 600,
+                            color: '#F2EFE7',
+                            margin: '0 0 2px',
+                          }}
+                        >
+                          4/5
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 10,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            color: '#A79E8F',
+                            margin: 0,
+                          }}
+                        >
+                          Sessions
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 24,
+                            fontWeight: 600,
+                            color: '#F2EFE7',
+                            margin: '0 0 2px',
+                          }}
+                        >
+                          2
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 10,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            color: '#A79E8F',
+                            margin: 0,
+                          }}
+                        >
+                          Adjusted
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coach message */}
+                <div
+                  style={{
+                    background: '#262019',
+                    border: '1px solid #3A322A',
+                    borderRadius: 'var(--radius-m)',
+                    padding: '20px',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      color: 'var(--trust)',
+                      margin: '0 0 10px',
+                    }}
+                  >
+                    Coach
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 13.5,
+                      color: '#A79E8F',
+                      lineHeight: 1.65,
+                      margin: 0,
+                    }}
+                  >
+                    You&apos;ve hit every adjusted session this week — that&apos;s the
+                    pattern that matters more than a perfect streak. Saturday&apos;s
+                    plan is set to build on it, not punish Wednesday.
+                  </p>
+                </div>
+
+                {/* Gym schedule */}
+                <div
+                  style={{
+                    background: '#262019',
+                    border: '1px solid #3A322A',
+                    borderRadius: 'var(--radius-m)',
+                    padding: '20px 20px 4px',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: '#F2EFE7',
+                      margin: '0 0 12px',
+                    }}
+                  >
+                    Gym schedule — SmartGym
+                  </p>
+                  {[
+                    { dot: '#2E6B5E', title: 'HIIT — Coach Otieno', time: 'Fri, 6:00 AM' },
+                    { dot: null, title: 'Mobility & recovery', time: 'Sat, 9:00 AM' },
+                  ].map((item, idx, arr) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '10px 0',
+                        borderBottom: idx < arr.length - 1 ? '1px solid #3A322A' : 'none',
+                      }}
+                    >
+                      {item.dot ? (
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: item.dot,
+                            flexShrink: 0,
+                          }}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            border: '1.5px solid #3A322A',
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: 13.5,
+                            fontWeight: 500,
+                            color: '#F2EFE7',
+                            margin: '0 0 2px',
+                          }}
+                        >
+                          {item.title}
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 10.5,
+                            color: '#A79E8F',
+                            margin: 0,
+                          }}
+                        >
+                          {item.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .dash-sidebar { display: none !important; }
+          .dash-cards { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
+  )
+}
+
+// ─── SECTION F: Pricing ──────────────────────────────────────────────────────
+
+function Pricing() {
+  const checkIcon = (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <circle cx="7" cy="7" r="7" fill="var(--trust-soft)" />
+      <path d="M4 7l2 2 4-4" stroke="var(--trust)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+
+  const plans = [
+    {
+      name: 'Preview',
+      price: 'KES 0',
+      per: null,
+      desc: 'See your full week\'s structure before paying anything.',
+      features: ['Full week preview, workout + meals', 'No card required'],
+      cta: 'Start preview',
+      ctaType: 'ghost' as const,
+      highlight: false,
+      badge: null,
+    },
+    {
+      name: 'Adaptive plan',
+      price: 'KES 1,200',
+      per: '/month',
+      desc: 'Workout + nutrition, continuously adapting.',
+      features: [
+        'Plan adapts weekly to real data',
+        'Full nutrition with NCD awareness',
+        'PDF + DOCX download',
+        'Coach marketplace access',
+      ],
+      cta: 'Get your plan',
+      ctaType: 'primary' as const,
+      highlight: true,
+      badge: 'Most Adaptive',
+    },
+    {
+      name: 'One-time plan',
+      price: 'KES 450',
+      per: null,
+      desc: 'A single generated plan, no subscription.',
+      features: [
+        'One workout OR nutrition plan',
+        'PDF + DOCX download',
+        'No adapting after generation',
+      ],
+      cta: 'Get one-time plan',
+      ctaType: 'ghost' as const,
+      highlight: false,
+      badge: null,
+    },
   ]
 
   return (
-    <section className="py-12 bg-white border-y border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="flex justify-center mb-2">{stat.icon}</div>
-              <p className="text-3xl font-bold text-brand-600 mb-0.5">{stat.value}</p>
-              <p className="text-sm text-slate-500">{stat.label}</p>
+    <section style={{ background: 'var(--bg)', padding: '80px 0' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+        <Eyebrow>— One price. Nothing hidden later.</Eyebrow>
+        <h2
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 42,
+            fontWeight: 600,
+            color: 'var(--ink)',
+            letterSpacing: '-0.01em',
+            margin: '0 0 12px',
+          }}
+        >
+          Simple pricing, shown in full
+        </h2>
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 15,
+            color: 'var(--ink-soft)',
+            maxWidth: 580,
+            marginBottom: 48,
+            lineHeight: 1.65,
+          }}
+        >
+          Preview any plan for free. Pay only when you want the full, adapting,
+          downloadable version — no surprise add-ons for nutrition, no fee that
+          jumps once you&apos;re hooked.
+        </p>
+
+        <div
+          className="pricing-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr',
+            gap: 20,
+            alignItems: 'start',
+          }}
+        >
+          {plans.map((plan, i) => (
+            <div
+              key={i}
+              style={{
+                background: 'var(--bg-raised)',
+                border: plan.highlight ? '1.5px solid var(--accent)' : '1px solid var(--line)',
+                borderRadius: 'var(--radius-l)',
+                padding: '28px 28px 32px',
+                position: 'relative',
+                boxShadow: plan.highlight
+                  ? '0 4px 28px rgba(184,84,46,.12)'
+                  : 'none',
+              }}
+            >
+              {/* Badge */}
+              {plan.badge && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: -14,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'var(--accent)',
+                    color: 'var(--accent-ink)',
+                    borderRadius: 999,
+                    padding: '4px 14px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {plan.badge}
+                </div>
+              )}
+
+              <p
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 19,
+                  fontWeight: 600,
+                  color: 'var(--ink)',
+                  margin: '0 0 12px',
+                }}
+              >
+                {plan.name}
+              </p>
+
+              {/* Price */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 12 }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 40,
+                    fontWeight: 400,
+                    color: 'var(--ink)',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {plan.price}
+                </span>
+                {plan.per && (
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 14,
+                      color: 'var(--accent)',
+                    }}
+                  >
+                    {plan.per}
+                  </span>
+                )}
+              </div>
+
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 13.5,
+                  color: 'var(--ink-soft)',
+                  marginBottom: 20,
+                  lineHeight: 1.55,
+                }}
+              >
+                {plan.desc}
+              </p>
+
+              {/* Features */}
+              <ul
+                style={{
+                  listStyle: 'none',
+                  padding: 0,
+                  margin: '0 0 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                {plan.features.map((f, fi) => (
+                  <li
+                    key={fi}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 13.5,
+                      color: 'var(--ink)',
+                    }}
+                  >
+                    {checkIcon}
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              {plan.ctaType === 'primary' ? (
+                <BtnPrimary style={{ width: '100%', justifyContent: 'center', textAlign: 'center' }}>
+                  {plan.cta}
+                </BtnPrimary>
+              ) : (
+                <BtnGhost style={{ width: '100%', justifyContent: 'center', textAlign: 'center' }}>
+                  {plan.cta}
+                </BtnGhost>
+              )}
             </div>
           ))}
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .pricing-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </section>
   )
 }
 
-// ─── Section: Footer ──────────────────────────────────────────────────────────
+// ─── SECTION G: Footer ───────────────────────────────────────────────────────
 
 function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-400 py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+    <footer style={{ background: 'var(--ink)', padding: '52px 0 36px' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+        <div
+          className="footer-grid"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 32,
+            marginBottom: 36,
+          }}
+        >
+          {/* Brand */}
           <div>
-            <p className="text-xl font-bold text-white mb-1">PHYZIQ</p>
-            <p className="text-sm">Built for how you actually live.</p>
-            <p className="text-sm mt-1">🇰🇪 Nairobi, Kenya</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <path
+                  d="M2 12 Q5 4 9 9 Q13 14 16 6"
+                  stroke="#B8542E"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: '#F2EFE7',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                PHYZIQ
+              </span>
+            </div>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                color: '#A79E8F',
+                margin: '0 0 6px',
+              }}
+            >
+              Built for how you actually live.
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                color: '#A79E8F',
+                margin: 0,
+              }}
+            >
+              🇰🇪 Nairobi, Kenya
+            </p>
           </div>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">ODPC Compliance</a>
+
+          {/* Links */}
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            {['Privacy Policy', 'Terms', 'ODPC Compliance'].map((l) => (
+              <a
+                key={l}
+                href="#"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  color: '#A79E8F',
+                  textDecoration: 'none',
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={(e) => {
+                  ;(e.currentTarget as HTMLAnchorElement).style.color = '#F2EFE7'
+                }}
+                onMouseLeave={(e) => {
+                  ;(e.currentTarget as HTMLAnchorElement).style.color = '#A79E8F'
+                }}
+              >
+                {l}
+              </a>
+            ))}
           </div>
         </div>
-        <div className="mt-6 pt-6 border-t border-slate-800 text-xs text-slate-600">
-          © {new Date().getFullYear()} PHYZIQ. All rights reserved. Regulated under Kenya Data Protection Act 2019.
+
+        {/* Copyright */}
+        <div
+          style={{
+            borderTop: '1px solid #3A322A',
+            paddingTop: 20,
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: '#5C5449',
+              margin: 0,
+            }}
+          >
+            © {new Date().getFullYear()} PHYZIQ. All rights reserved. Regulated under Kenya Data
+            Protection Act 2019.
+          </p>
         </div>
       </div>
     </footer>
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Root page export ────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-
   return (
     <>
-      <Navbar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <Navbar />
       <main>
         <Hero />
-        <StatsBar />
-        <TodayDashboard />
-        <WeeklyPlan />
-        <Marketplace />
-        <AIChatPreview />
-        <MPesaPreview />
+        <DifferentiatorCards />
+        <ForGyms />
+        <DashboardPreview />
+        <Pricing />
       </main>
       <Footer />
     </>
