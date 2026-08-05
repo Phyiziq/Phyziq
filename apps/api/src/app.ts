@@ -23,6 +23,10 @@ import compression from 'compression';
 import { rateLimiter } from './middleware/rate-limiter.js';
 import { errorHandler } from './middleware/error-handler.js';
 
+import { authRouter } from './modules/auth/index.js';
+import { onboardingRouter } from './modules/onboarding/index.js';
+import { consentRouter } from './modules/consent/index.js';
+
 const CORS_ALLOWLIST = [
   'https://phyziq.com',
   'https://www.phyziq.com',
@@ -66,9 +70,9 @@ export function createApp(): express.Application {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // TODO: mount module routers here as they are implemented
-  // app.use('/api/v1/auth', authRouter);
-  // app.use('/api/v1/members', membersRouter);
+  app.use('/auth', authRouter);
+  app.use('/onboarding', onboardingRouter);
+  app.use('/members/me/consent', consentRouter);
 
   // ── 8. Global error handler ───────────────────────────────────────────
   // Must be registered after all routes. Express identifies error middleware

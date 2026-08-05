@@ -81,7 +81,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 10.6**
 
 
-- [ ] 5. Authentication module — OTP, JWT, and session management
+- [x] 5. Authentication module — OTP, JWT, and session management
   - [ ] 5.1 Implement OTP request and delivery service
     - `POST /auth/otp/request`: validates E.164 phone, checks Redis rate limit, calls Twilio/Africa's Talking (WhatsApp primary, SMS fallback within 30s, voice OTP on second retry)
     - Store OTP in Redis: key `otp:{phone}`, TTL 300s
@@ -105,100 +105,100 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - _Requirements: 7.10, 11.1_
 
 
-- [ ] 6. Checkpoint — Core infrastructure verification
+- [x] 6. Checkpoint — Core infrastructure verification
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Consent and privacy module
-  - [ ] 7.1 Implement consent management endpoints
+- [x] 7. Consent and privacy module
+  - [x] 7.1 Implement consent management endpoints
     - `POST /members/me/consent`: upsert consent record (type: general | health_data | ai_training), write to `consent_records`, log to `compliance_events`
     - `GET /members/me/consent`: return all three consent categories with granted/revoked status
     - _Requirements: 1.10, 11.3_
 
-  - [ ] 7.2 Implement consent withdrawal and health data deletion job
+  - [x] 7.2 Implement consent withdrawal and health data deletion job
     - On `health_data` consent revocation: immediately block new health writes, enqueue Bull job with 72h delay
     - Job execution: `DELETE FROM ncd_profiles WHERE member_id = ?`, `DELETE FROM biometric_logs WHERE member_id = ?`, send confirmation notification, write to `compliance_events`
     - _Requirements: 11.4_
 
-  - [ ]* 7.3 Write property test: health data deletion after consent withdrawal
+  - [x]* 7.3 Write property test: health data deletion after consent withdrawal
     - **Property 43: Health Data Deletion After Consent Withdrawal**
     - **Validates: Requirements 11.4**
 
-  - [ ] 7.4 Implement ODPC member count monitoring alert
+  - [x] 7.4 Implement ODPC member count monitoring alert
     - Background job: count `consent_records` where `consent_type = 'health_data'` and `granted = TRUE`; fire alert when approaching 100
     - Write ODPC registration events to `compliance_events`
     - _Requirements: 11.5_
 
 
-- [ ] 8. Onboarding module — QR decode, registration, and NCD screening
-  - [ ] 8.1 Implement QR code decode and pre-fill endpoint
+- [x] 8. Onboarding module — QR decode, registration, and NCD screening
+  - [x] 8.1 Implement QR code decode and pre-fill endpoint
     - `POST /onboarding/qr-context`: decode `qr_code_token`, look up `gym_partners` record, return `{ gym_name, location, equipment_list }`
     - If token invalid or gym inactive, return 404
     - _Requirements: 1.1_
 
-  - [ ]* 8.2 Write property test: QR code pre-fill consistency
+  - [x]* 8.2 Write property test: QR code pre-fill consistency
     - **Property 1: QR Code Pre-fill Consistency**
     - **Validates: Requirements 1.1**
 
-  - [ ] 8.3 Implement registration form submission endpoint
+  - [x] 8.3 Implement registration form submission endpoint
     - `POST /onboarding/register`: Zod schema validates all required fields and physiological bounds; UPSERT `members`; link `gym_id` if from QR context; support gym-free path
     - _Requirements: 1.2, 1.5, 1.9_
 
-  - [ ]* 8.4 Write property test: registration validation completeness
+  - [x]* 8.4 Write property test: registration validation completeness
     - **Property 2: Registration Validation Completeness**
     - **Validates: Requirements 1.2, 1.5**
 
-  - [ ] 8.5 Implement NCD screening submission endpoint
+  - [x] 8.5 Implement NCD screening submission endpoint
     - `POST /onboarding/ncd-screening`: require `health_data` consent check before accepting; write to `HealthDataRepository` (Health_Data_Store only, not main DB)
     - _Requirements: 1.6, 1.7, 1.10_
 
 
-- [ ] 9. ML Generation Layer — NCD Substitution Engine
-  - [ ] 9.1 Implement NCD substitution rules table and lookup service in `packages/ai-engine`
+- [x] 9. ML Generation Layer — NCD Substitution Engine
+  - [x] 9.1 Implement NCD substitution rules table and lookup service in `packages/ai-engine`
     - Seed `ncd_substitution_rules` table with `(food_item_id, ncd_risk_type) → substitute_food_item_id` mappings
     - `applyNcdSubstitutions(plan, ncdProfile)`: deterministic rule lookup, returns modified plan
     - `reverseNcdSubstitutions(plan, ncdProfile)`: inverse mapping for round-trip property
     - _Requirements: 2.1_
 
-  - [ ]* 9.2 Write property test: NCD substitution correctness
+  - [x]* 9.2 Write property test: NCD substitution correctness
     - **Property 4: NCD Substitution Correctness**
     - **Validates: Requirements 2.1**
 
-  - [ ]* 9.3 Write property test: NCD substitution round-trip
+  - [x]* 9.3 Write property test: NCD substitution round-trip
     - **Property 10: NCD Substitution Round-Trip**
     - **Validates: Requirements 2.8**
 
-  - [ ] 9.4 Implement NCD conflict detection service
+  - [x] 9.4 Implement NCD conflict detection service
     - `detectNcdConflicts(mealLog, ncdProfile)`: check meal item nutritional values against NCD thresholds (GI bounds for diabetes, sodium bounds for hypertension); return warnings array with recommended alternatives and confidence scores
     - _Requirements: 2.3_
 
-  - [ ]* 9.5 Write property test: NCD conflict detection coverage
+  - [x]* 9.5 Write property test: NCD conflict detection coverage
     - **Property 6: NCD Conflict Detection Coverage**
     - **Validates: Requirements 2.3**
 
 
-- [ ] 10. ML Generation Layer — Macro Adaptation and Grocery List Engine
-  - [ ] 10.1 Implement Macro Adaptation Engine in `packages/ai-engine`
+- [x] 10. ML Generation Layer — Macro Adaptation and Grocery List Engine
+  - [x] 10.1 Implement Macro Adaptation Engine in `packages/ai-engine`
     - `adaptMacroTargets(weightLogs: BiometricLog[], goal, baselineTDEE)`: exponential moving average on 7-day weight trend, returns adjusted `{ calories, protein_g, carbs_g, fat_g }`
     - Direction check: weight-gain trend → reduce calories for fat-loss goal; weight-loss trend → increase calories for muscle-gain goal
     - _Requirements: 2.4_
 
-  - [ ]* 10.2 Write property test: macro adaptation direction
+  - [x]* 10.2 Write property test: macro adaptation direction
     - **Property 7: Macro Adaptation Direction**
     - **Validates: Requirements 2.4**
 
-  - [ ] 10.3 Implement Grocery List generator
+  - [x] 10.3 Implement Grocery List generator
     - `generateGroceryList(weeklyNutritionPlan)`: aggregate all ingredient references across all meals, group by food category, include estimated quantities
     - _Requirements: 2.6_
 
-  - [ ]* 10.4 Write property test: grocery list coverage
+  - [x]* 10.4 Write property test: grocery list coverage
     - **Property 8: Grocery List Coverage**
     - **Validates: Requirements 2.6**
 
-  - [ ] 10.5 Implement budget optimiser for grocery list
+  - [x] 10.5 Implement budget optimiser for grocery list
     - Sort items by estimated cost ascending; flag three lowest-cost substitutes per protein source
     - _Requirements: 2.7_
 
-  - [ ]* 10.6 Write property test: budget optimiser ordering
+  - [x]* 10.6 Write property test: budget optimiser ordering
     - **Property 9: Budget Optimiser Ordering**
     - **Validates: Requirements 2.7**
 

@@ -8,6 +8,7 @@
  */
 
 export { HealthDataRepository } from './health-data.repository.js';
+export * from './consent.router.js';
 
 // Re-export closeHealthPool for graceful shutdown use in the API entry point
 export { closeHealthPool } from './health-db.js';
