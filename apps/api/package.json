@@ -15,16 +15,20 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@phyziq/ai-engine": "workspace:*",
     "@phyziq/shared": "workspace:*",
     "@prisma/client": "^5.22.0",
     "bullmq": "^6.0.8",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
+    "docx": "^8.2.2",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.14.0",
     "pg": "8.13.1",
+    "qrcode": "^1.5.3",
     "zod": "3.24.1"
   },
   "devDependencies": {
