@@ -6,12 +6,18 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "jest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts"
   },
+  "dependencies": {
+    "@phyziq/shared": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.7.2",
-    "@types/node": "^22.10.2"
+    "@types/node": "^22.10.2",
+    "fast-check": "^3.19.0",
+    "vitest": "^2.1.8"
   }
 }
