@@ -2,9 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PHYZIQ — A fitness plan that adjusts',
-  description:
-    'Adaptive generates your workout and nutrition plan, then rebuilds it around missed sessions, night shifts, and real life.',
+  title: 'PHYZIQ | Premium Adaptive Fitness',
+  description: 'AI-driven fitness and nutrition plans that adapt to your life in real-time.',
 }
 
 export default function RootLayout({
@@ -14,13 +13,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+        {/* Background ambient glow effect */}
+        <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-accent/20 blur-[120px] pointer-events-none" />
+        <div className="fixed bottom-[-20%] right-[-10%] w-[40%] h-[50%] rounded-full bg-accent/10 blur-[100px] pointer-events-none" />
+        
+        {/* Main Content */}
+        <main className="flex-grow z-10">
+          {children}
+        </main>
+      </body>
     </html>
   )
 }

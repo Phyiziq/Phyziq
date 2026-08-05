@@ -8,32 +8,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#F2EFE7',
-        bgRaised: '#FBF9F4',
-        ink: '#241F1A',
-        inkSoft: '#5C5449',
-        line: '#E2DCCC',
-        accent: '#B8542E',
-        accentInk: '#FBF9F4',
-        accentSoft: '#F0D9C9',
-        trust: '#2E6B5E',
-        trustSoft: '#DCEAE5',
-        darkBg: '#1C1815',
-        darkRaised: '#262019',
-        darkInk: '#F2EFE7',
-        darkLine: '#3A322A',
+        background: '#0F172A', // Slate 900
+        panel: '#1E293B',      // Slate 800
+        panelHover: '#334155', // Slate 700
+        primary: '#F8FAFC',    // Slate 50 (Text)
+        muted: '#94A3B8',      // Slate 400 (Muted Text)
+        accent: '#F56565',     // Vibrant Red
+        accentHover: '#E53E3E',
+        border: '#334155',     // Slate 700
       },
       fontFamily: {
-        display: ['Fraunces', 'serif'],
-        body: ['Inter', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
       },
-      borderRadius: {
-        s: '6px',
-        m: '12px',
-        l: '20px',
-        pill: '999px',
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.5s ease-out forwards',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        }
+      }
     },
   },
   plugins: [],
