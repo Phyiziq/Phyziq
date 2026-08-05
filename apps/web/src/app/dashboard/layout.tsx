@@ -23,13 +23,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden animate-fade-in">
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: 'var(--bg)', overflow: 'hidden' }}>
       
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-64 bg-panel border-r border-border p-6">
-        <div className="text-2xl font-display font-bold tracking-widest text-primary mb-12">PHYZIQ</div>
+      <aside className="dashboard-sidebar" style={{ display: 'flex', flexDirection: 'column', width: '260px', backgroundColor: 'var(--bg-raised)', borderRight: '1px solid var(--line)', padding: '24px' }}>
+        <div style={{ fontSize: '24px', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--ink)', marginBottom: '48px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: 'var(--accent)' }}>~</span> Adaptive
+        </div>
         
-        <nav className="flex-1 space-y-2">
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -37,11 +39,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive ? 'bg-accent/10 text-accent font-medium' : 'text-muted hover:text-primary hover:bg-panelHover'
-                }`}
+                className="nav-link"
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderRadius: 'var(--radius-s)', textDecoration: 'none',
+                  backgroundColor: isActive ? 'var(--trust-soft)' : 'transparent',
+                  color: isActive ? 'var(--trust)' : 'var(--ink-soft)',
+                  fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: isActive ? 600 : 500
+                }}
               >
-                <Icon size={20} />
+                <Icon size={18} />
                 {item.name}
               </Link>
             )
@@ -50,36 +56,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors mt-auto"
+          style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderRadius: 'var(--radius-s)', color: 'var(--accent)', fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', marginTop: 'auto', textAlign: 'left' }}
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
           Sign Out
         </button>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between p-4 bg-panel border-b border-border">
-          <div className="text-xl font-display font-bold text-primary">PHYZIQ</div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-primary p-2">
+        <header className="md:hidden" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: 'var(--bg-raised)', borderBottom: '1px solid var(--line)' }}>
+          <div style={{ fontSize: '20px', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--ink)' }}>
+            <span style={{ color: 'var(--accent)' }}>~</span> Adaptive
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: 'var(--ink)' }}>
             <Menu size={24} />
           </button>
         </header>
 
-        {/* Mobile Menu Dropdown (Mocked for brevity) */}
+        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-panel border-b border-border p-4 space-y-2">
+          <div className="md:hidden" style={{ backgroundColor: 'var(--bg-raised)', borderBottom: '1px solid var(--line)', padding: '16px' }}>
             {navItems.map(item => (
-              <Link key={item.name} href={item.href} className="block px-4 py-2 text-primary" onClick={() => setMobileMenuOpen(false)}>
+              <Link key={item.name} href={item.href} style={{ display: 'block', padding: '10px 0', fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--ink)', textDecoration: 'none', borderBottom: '1px solid var(--line)' }} onClick={() => setMobileMenuOpen(false)}>
                 {item.name}
               </Link>
             ))}
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-10">
+        <main style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
           {children}
         </main>
       </div>

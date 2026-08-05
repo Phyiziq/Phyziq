@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 
 const navLinks = ['How it works', 'For gyms', 'Marketplace', 'Pricing']
 
@@ -34,12 +35,12 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex" style={{ gap: '12px', alignItems: 'center' }}>
-          <a href="#" className="ghost-btn" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)', textDecoration: 'none', padding: '8px 16px', border: '1px solid var(--line)', borderRadius: '999px' }}>
+          <Link href="/login" className="ghost-btn" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)', textDecoration: 'none', padding: '8px 16px', border: '1px solid var(--line)', borderRadius: '999px' }}>
             Log in
-          </a>
-          <a href="#" className="primary-btn" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--accent-ink)', backgroundColor: 'var(--accent)', padding: '8px 20px', borderRadius: '999px', textDecoration: 'none' }}>
+          </Link>
+          <Link href="/register" className="primary-btn" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--accent-ink)', backgroundColor: 'var(--accent)', padding: '8px 20px', borderRadius: '999px', textDecoration: 'none' }}>
             Get your plan
-          </a>
+          </Link>
         </div>
 
         {/* Hamburger */}
@@ -61,9 +62,9 @@ export default function Navbar() {
               {link}
             </a>
           ))}
-          <a href="#" style={{ display: 'block', marginTop: '16px', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--accent-ink)', backgroundColor: 'var(--accent)', padding: '10px', borderRadius: '999px', textDecoration: 'none' }}>
+          <Link href="/register" style={{ display: 'block', marginTop: '16px', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--accent-ink)', backgroundColor: 'var(--accent)', padding: '10px', borderRadius: '999px', textDecoration: 'none' }}>
             Get your plan
-          </a>
+          </Link>
         </div>
       )}
     </nav>

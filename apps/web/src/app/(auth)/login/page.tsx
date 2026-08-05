@@ -35,46 +35,48 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="glass-panel p-8">
-      <h2 className="text-2xl font-display font-bold mb-6 text-center">Welcome Back</h2>
+    <div>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '24px', color: 'var(--ink)', marginBottom: '24px', textAlign: 'center' }}>
+        Welcome Back
+      </h2>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-200 text-sm text-center">
+        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--trust-soft)', color: 'var(--trust)', borderRadius: 'var(--radius-s)', fontSize: '14px', fontFamily: 'var(--font-body)' }}>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label className="block text-sm font-medium text-muted mb-1">Email</label>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--ink-soft)', marginBottom: '4px', fontFamily: 'var(--font-body)' }}>Email</label>
           <input 
             type="email" 
             required 
-            className="input-field" 
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 'var(--radius-s)', backgroundColor: 'var(--bg)', color: 'var(--ink)', fontFamily: 'var(--font-body)', fontSize: '15px' }}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted mb-1">Password</label>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--ink-soft)', marginBottom: '4px', fontFamily: 'var(--font-body)' }}>Password</label>
           <input 
             type="password" 
             required 
-            className="input-field" 
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 'var(--radius-s)', backgroundColor: 'var(--bg)', color: 'var(--ink)', fontFamily: 'var(--font-body)', fontSize: '15px' }}
           />
         </div>
         
-        <button type="submit" disabled={loading} className="btn-primary w-full mt-6">
+        <button type="submit" disabled={loading} className="primary-btn" style={{ width: '100%', marginTop: '16px', padding: '12px', border: 'none', borderRadius: 'var(--radius-m)', backgroundColor: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 600, fontSize: '15px', fontFamily: 'var(--font-body)', cursor: 'pointer' }}>
           {loading ? 'Authenticating...' : 'Sign In'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-muted">
-        Don't have an account? <Link href="/register" className="text-accent hover:underline">Register here</Link>
+      <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--ink-soft)', fontFamily: 'var(--font-body)' }}>
+        Don't have an account? <Link href="/register" style={{ color: 'var(--accent)', fontWeight: 500, textDecoration: 'none' }}>Register here</Link>
       </div>
     </div>
   );

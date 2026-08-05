@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import Chip from './Chip'
 
 function AdaptivePathSVG() {
@@ -55,12 +56,12 @@ export default function HeroSection() {
             Adaptive generates your workout and nutrition plan, then rebuilds it around missed sessions, night shifts, and real life — not the other way around.
           </p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <a href="#" style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14.5px', backgroundColor: 'var(--accent)', color: 'var(--accent-ink)', padding: '13px 26px', borderRadius: '999px', textDecoration: 'none', transition: 'background-color .15s' }}>
+            <Link href="/register" style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14.5px', backgroundColor: 'var(--accent)', color: 'var(--accent-ink)', padding: '13px 26px', borderRadius: '999px', textDecoration: 'none', transition: 'background-color .15s' }}>
               Get your plan
-            </a>
-            <a href="#" style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14.5px', backgroundColor: 'transparent', color: 'var(--ink)', padding: '13px 26px', borderRadius: '999px', border: '1px solid var(--line)', textDecoration: 'none', transition: 'border-color .15s' }}>
+            </Link>
+            <Link href="#how-it-works" style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14.5px', backgroundColor: 'transparent', color: 'var(--ink)', padding: '13px 26px', borderRadius: '999px', border: '1px solid var(--line)', textDecoration: 'none', transition: 'border-color .15s' }}>
               See how it works
-            </a>
+            </Link>
           </div>
         </div>
 

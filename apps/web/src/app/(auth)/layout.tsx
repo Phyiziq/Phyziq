@@ -1,19 +1,22 @@
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12 relative animate-fade-in">
-      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-muted hover:text-primary transition-colors">
-        <ArrowLeft size={20} /> Back to home
-      </Link>
+    <div style={{ backgroundColor: 'var(--bg)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', position: 'relative' }}>
       
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-display font-bold text-primary tracking-widest mb-2">PHYZIQ</h1>
-        <p className="text-muted">Premium Adaptive Fitness</p>
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <span style={{ fontSize: '32px', color: 'var(--accent)' }}>~</span>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '32px', color: 'var(--ink)', letterSpacing: '-.01em', margin: 0 }}>
+            Adaptive
+          </h1>
+        </Link>
+        <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', marginTop: '8px' }}>
+          A fitness plan that adjusts to you.
+        </p>
       </div>
       
-      <div className="w-full max-w-md">
+      <div style={{ width: '100%', maxWidth: '440px', backgroundColor: 'var(--bg-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-l)', padding: '32px', boxShadow: '0 4px 24px rgba(36,31,26,.05)' }}>
         {children}
       </div>
     </div>
