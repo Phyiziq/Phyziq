@@ -64,14 +64,14 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 
 
 - [x] 4. API foundation — Express app, middleware, and Zod validation
-  - [ ] 4.1 Bootstrap `apps/api` Express application with TypeScript
+  - [x] 4.1 Bootstrap `apps/api` Express application with TypeScript
     - Configure `zod` request validation middleware applied globally before all route handlers
     - Configure `compression` middleware (gzip + Brotli, threshold 10KB)
     - Configure CORS allowlist (`phyziq.com`, localhost dev)
     - Configure structured JSON error handler returning `ApiError` envelope
     - _Requirements: 10.6, 11.8_
 
-  - [ ] 4.2 Implement Redis-based rate limiter middleware
+  - [x] 4.2 Implement Redis-based rate limiter middleware
     - OTP endpoints: 3 requests/hour/phone
     - General API: 1000 requests/hour/member JWT
     - _Requirements: 11.1 (auth security)_
@@ -82,12 +82,12 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 
 
 - [x] 5. Authentication module — OTP, JWT, and session management
-  - [ ] 5.1 Implement OTP request and delivery service
+  - [x] 5.1 Implement OTP request and delivery service
     - `POST /auth/otp/request`: validates E.164 phone, checks Redis rate limit, calls Twilio/Africa's Talking (WhatsApp primary, SMS fallback within 30s, voice OTP on second retry)
     - Store OTP in Redis: key `otp:{phone}`, TTL 300s
     - _Requirements: 1.3, 1.4, 11.1_
 
-  - [ ] 5.2 Implement OTP verification and JWT issuance
+  - [x] 5.2 Implement OTP verification and JWT issuance
     - `POST /auth/otp/verify`: validates code + expiry from Redis, UPSERT member, prompt consent for new members, issue HS256 JWT (24h) + refresh token (30d in HttpOnly cookie)
     - JWT payload: `{ sub, role, gym_id, iat, exp }`
     - `POST /auth/refresh`: validate HttpOnly refresh token from Redis, issue new access token
@@ -98,7 +98,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 42: JWT Token Expiry**
     - **Validates: Requirements 11.1**
 
-  - [ ] 5.4 Implement JWT authentication middleware
+  - [x] 5.4 Implement JWT authentication middleware
     - Verify HS256 signature, check `exp`, extract `sub`/`role`/`gym_id` into `req.auth`
     - Return `TOKEN_EXPIRED` error to trigger client refresh flow
     - Gym owner session max 8h enforced by JWT `exp` (no refresh for gym owner role)
@@ -203,8 +203,8 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 2.7**
 
 
-- [ ] 11. ML Generation Layer — Progressive Overload and Volume Engines
-  - [ ] 11.1 Implement Progressive Overload Engine in `packages/ai-engine`
+- [x] 11. ML Generation Layer — Progressive Overload and Volume Engines
+  - [x] 11.1 Implement Progressive Overload Engine in `packages/ai-engine`
     - `computeNextSessionLoad(exerciseLogs: WorkoutLog[], fitnessLevel)`: linear periodisation algorithm; returns `{ exercise_id, recommended_weight_kg, recommended_reps, recommended_sets, confidence }`
     - Bounds: `recommended_weight_kg > 0`, max single-step increase 15% (`≤ logged_weight_kg * 1.15`), confidence in [0, 100]
     - _Requirements: 3.1_
@@ -213,7 +213,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 11: Progressive Overload Safety Bounds**
     - **Validates: Requirements 3.1**
 
-  - [ ] 11.3 Implement target load increase for consistent overperformance
+  - [x] 11.3 Implement target load increase for consistent overperformance
     - In `computeNextSessionLoad`: detect 3 consecutive sessions exceeding target by >20%; return new target in range `[target × 1.05, target × 1.10]`
     - _Requirements: 3.4_
 
@@ -221,7 +221,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 14: Progressive Overload Target Range**
     - **Validates: Requirements 3.4**
 
-  - [ ] 11.5 Implement recovery-based intensity reduction
+  - [x] 11.5 Implement recovery-based intensity reduction
     - `applyRecoveryReduction(session, recentRecoveryScores)`: if two consecutive scores < 5, return session with intensity ≤ `original × 0.85`; attach `Confidence_Indicator`
     - _Requirements: 3.3_
 
@@ -229,7 +229,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 13: Recovery-Based Intensity Reduction**
     - **Validates: Requirements 3.3**
 
-  - [ ] 11.7 Implement Volume Redistribution Engine
+  - [x] 11.7 Implement Volume Redistribution Engine
     - `redistributeMissedVolume(weekSchedule, missedSessionId)`: spread missed volume across remaining sessions respecting recovery constraints; update `plan_sessions.status = 'rebuilt'` and set `adaptation_note`
     - _Requirements: 3.2_
 
@@ -238,8 +238,8 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 3.2**
 
 
-- [ ] 12. ML Generation Layer — Equipment constraint and plan consistency
-  - [ ] 12.1 Implement equipment constraint filter for plan generation
+- [x] 12. ML Generation Layer — Equipment constraint and plan consistency
+  - [x] 12.1 Implement equipment constraint filter for plan generation
     - `filterExercisesByEquipment(exercises, equipmentList)`: return only exercises where `equipment_required ⊆ equipmentList`
     - Applied during initial plan generation using gym QR context or member personal preferences
     - _Requirements: 3.7_
@@ -252,26 +252,26 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 17: Weekly Volume Consistency Invariant**
     - **Validates: Requirements 3.8**
 
-- [ ] 13. Checkpoint — ML engine verification
+- [x] 13. Checkpoint — ML engine verification
   - Ensure all tests pass, ask the user if questions arise.
 
 
-- [ ] 14. AI Orchestration — LLM async job queue infrastructure
-  - [ ] 14.1 Set up Redis Bull queue and worker process in `apps/api`
+- [x] 14. AI Orchestration — LLM async job queue infrastructure
+  - [x] 14.1 Set up Redis Bull queue and worker process in `apps/api`
     - Create Bull queues: `llm-jobs`, `cv-jobs`, `export-jobs`, `sync-jobs`, `report-jobs`
     - Worker process reads from queues, processes jobs, writes results to DB
     - WebSocket / SSE push "job_complete" event to client when job finishes
     - _Requirements: 4.1, 4.2, 8.1_
 
-  - [ ] 14.2 Implement LLM request pipeline using Claude 3.5 Sonnet
+  - [x] 14.2 Implement LLM request pipeline using Claude 3.5 Sonnet
     - `POST /coach/chat` and plan narrative generation enqueue `llm-jobs`; return `202 { job_id }` immediately
     - Worker calls Anthropic API with structured JSON schema output; writes result to DB; pushes WS event
     - Degrade gracefully: if queue depth > 500 or job exceeds 30s, return `AI_JOB_TIMEOUT` with `confidence = 0`
     - _Requirements: 8.1, 4.1_
 
 
-- [ ] 15. AI Orchestration — Computer Vision and voice transcription
-  - [ ] 15.1 Implement food photo recognition pipeline
+- [x] 15. AI Orchestration — Computer Vision and voice transcription
+  - [x] 15.1 Implement food photo recognition pipeline
     - `POST /logs/meal/photo`: upload image to S3, enqueue `cv-jobs` job with pre-signed URL, return `202 { job_id }`
     - CV worker: call Google Vision API, fuzzy-match labels to `food_items` using pgvector cosine similarity, write `meal_log_draft`, push WS event
     - Every food item in response includes `confidence` in [0, 100]
@@ -281,22 +281,22 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 18: Confidence Indicator Presence on AI Estimates**
     - **Validates: Requirements 4.3**
 
-  - [ ] 15.3 Implement voice meal log transcription pipeline
+  - [x] 15.3 Implement voice meal log transcription pipeline
     - `POST /logs/meal/voice`: upload audio to S3, transcribe via Whisper API, pass transcription to LLM layer for food item extraction, write draft log, push WS event
     - _Requirements: 4.2_
 
 
-- [ ] 16. Logging module — workout, meal, and correction flows
-  - [ ] 16.1 Implement manual workout log endpoint
+- [x] 16. Logging module — workout, meal, and correction flows
+  - [x] 16.1 Implement manual workout log endpoint
     - `POST /logs/workout`: validate with Zod (exercise, weight_kg, reps, sets), insert `workout_logs`, return updated session summary within 2s
     - Set `synced = TRUE` when written online; handle `offline_id` dedup field
     - _Requirements: 4.6_
 
-  - [ ] 16.2 Implement manual meal log endpoint
+  - [x] 16.2 Implement manual meal log endpoint
     - `POST /logs/meal`: validate with Zod, insert `meal_logs`, run `detectNcdConflicts` and attach warnings to response
     - _Requirements: 4.6, 2.3_
 
-  - [ ] 16.3 Implement correction flow endpoint
+  - [x] 16.3 Implement correction flow endpoint
     - `PATCH /logs/meal/{id}`: pre-populate correction form state from AI estimate; on submit, persist corrected values, store original in `corrections` JSONB field, flip `log_source` signal for training
     - _Requirements: 4.4, 4.5_
 
@@ -309,13 +309,13 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 4.5**
 
 
-- [ ] 17. Plan module — generation, adaptation, and Free Preview
-  - [ ] 17.1 Implement initial plan generation service
+- [x] 17. Plan module — generation, adaptation, and Free Preview
+  - [x] 17.1 Implement initial plan generation service
     - Orchestrate: fetch NCD profile from `HealthDataRepository` → apply NCD substitutions → apply equipment filter → compute progressive overload seeds → enqueue LLM job for plan narrative → write `adaptive_plans` record with `status = 'active'`
     - Target: plan available for Free Preview within 10s on 3G
     - _Requirements: 1.8, 2.1, 3.7_
 
-  - [ ] 17.2 Implement Free Preview endpoint
+  - [x] 17.2 Implement Free Preview endpoint
     - `GET /onboarding/preview-plan`: return full 7-day plan data with all sessions and meals; set `is_paid = FALSE`; export actions gated by `PlanPreviewGate`
     - _Requirements: 5.1_
 
@@ -323,12 +323,12 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 22: Free Preview Content Completeness**
     - **Validates: Requirements 5.1**
 
-  - [ ] 17.4 Implement plan adaptation trigger
+  - [x] 17.4 Implement plan adaptation trigger
     - `POST /plans/adapt`: triggered by missed session (auto within 6h), recovery score drop, performance overachievement; call appropriate ML engine, increment `adaptive_plans.version`, trigger export invalidation
     - NCD plan regeneration: triggered when `ncd_profiles` updated; complete within 24h
     - _Requirements: 3.2, 3.3, 3.4, 2.5_
 
-  - [ ] 17.5 Implement exercise swap endpoint
+  - [x] 17.5 Implement exercise swap endpoint
     - Within plan adaptation: pgvector cosine similarity search on `exercises.embedding` for biomechanically equivalent swap (same movement pattern); enqueue LLM job for one-sentence rationale; return within 3s for ML portion
     - _Requirements: 3.5, 3.6_
 
@@ -336,7 +336,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 15: Exercise Swap Response Completeness**
     - **Validates: Requirements 3.6**
 
-  - [ ] 17.7 Implement NCD medical disclaimer injection
+  - [x] 17.7 Implement NCD medical disclaimer injection
     - Middleware on nutrition plan responses: if member has any active NCD risk flag, append disclaimer text to response
     - _Requirements: 2.2_
 
@@ -345,11 +345,11 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 2.2**
 
 
-- [ ] 18. Checkpoint — Core member flow verification
+- [x] 18. Checkpoint — Core member flow verification
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 19. Payment module — Paystack M-Pesa STK Push integration
-  - [ ] 19.1 Implement `PaymentModule` with `initiatePayment` function and multi-rail router
+- [x] 19. Payment module — Paystack M-Pesa STK Push integration
+  - [x] 19.1 Implement `PaymentModule` with `initiatePayment` function and multi-rail router
     - Router map: `mpesa → PaystackMpesaRouter`, `card_ke → PaystackCardRouter`, `pesalink → PaystackPesalinkRouter`, `card_intl → StripeConnectRouter`
     - `POST /payments/initiate`: check Redis idempotency key, insert `payment_transactions (status=pending)`, call Paystack STK Push, return `202 { transaction_id, status: "waiting" }`
     - Encrypt all Paystack credentials at rest; read API keys from AWS Secrets Manager
@@ -359,7 +359,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 27: Payment Idempotency**
     - **Validates: Requirements 6.3**
 
-  - [ ] 19.3 Implement Paystack webhook handler and HMAC verification
+  - [x] 19.3 Implement Paystack webhook handler and HMAC verification
     - `POST /webhooks/paystack`: verify `X-Paystack-Signature` HMAC-SHA512; reject with 401 on failure; on success update `payment_transactions`, insert `payment_audit_log`, verify `amount_kes == gateway_amount`
     - _Requirements: 6.5, 6.8_
 
@@ -367,7 +367,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 30: Financial Amount Invariant**
     - **Validates: Requirements 6.8**
 
-  - [ ] 19.5 Implement payment retry with exponential backoff
+  - [x] 19.5 Implement payment retry with exponential backoff
     - On Paystack 5xx: retry after 1s, then 2s, then mark `failed`; maximum 3 total attempts
     - _Requirements: 6.4_
 
@@ -375,7 +375,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 28: Retry Count Invariant**
     - **Validates: Requirements 6.4**
 
-  - [ ] 19.7 Implement STK Push timeout handler
+  - [x] 19.7 Implement STK Push timeout handler
     - Schedule Redis delayed job at T+90s; if transaction still `pending`, set `status = 'timed_out'`, `gateway_amount = NULL`, notify member
     - _Requirements: 5.6_
 
@@ -384,8 +384,8 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 5.6**
 
 
-- [ ] 20. Payment module — plan unlock, subscriptions, and transaction history
-  - [ ] 20.1 Implement plan unlock on payment confirmation
+- [x] 20. Payment module — plan unlock, subscriptions, and transaction history
+  - [x] 20.1 Implement plan unlock on payment confirmation
     - On `payment_confirmed` event: set `adaptive_plans.is_paid = TRUE`, enqueue export generation jobs (PDF + DOCX), push WS event to member within 10s
     - Preserve plan state on payment failure: plan_data, status, is_paid unchanged
     - _Requirements: 5.5, 5.8_
@@ -394,7 +394,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 24: Plan State Preservation on Payment Failure**
     - **Validates: Requirements 5.7**
 
-  - [ ] 20.3 Implement subscription billing with billing anchor day
+  - [x] 20.3 Implement subscription billing with billing anchor day
     - Store `billing_anchor_day` on subscription creation; scheduler fires recurring charge on same calendar day; handle month-end edge cases by rolling to last day of shorter months
     - Notify member 24h before each renewal
     - _Requirements: 5.9_
@@ -403,7 +403,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 25: Subscription Billing Date Consistency**
     - **Validates: Requirements 5.9**
 
-  - [ ] 20.5 Implement transaction history endpoint
+  - [x] 20.5 Implement transaction history endpoint
     - `GET /payments/history`: return all transactions for authenticated member with date, amount, plan_reference, payment_method; paginated
     - _Requirements: 5.10_
 
@@ -411,7 +411,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 26: Transaction History Completeness**
     - **Validates: Requirements 5.10**
 
-  - [ ] 20.7 Implement pre-payment fee disclosure middleware
+  - [x] 20.7 Implement pre-payment fee disclosure middleware
     - Before any payment initiation: validate that all fees (plan fee, subscription fee, applicable taxes) are disclosed in the response payload; block initiation if disclosure payload is incomplete
     - _Requirements: 5.3_
 
@@ -419,8 +419,8 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 - [ ] 21. Checkpoint — Payment flow verification
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 22. Conversational AI Coach module
-  - [ ] 22.1 Implement chat endpoint with sliding context window
+- [x] 22. Conversational AI Coach module
+  - [x] 22.1 Implement chat endpoint with sliding context window
     - `POST /coach/chat`: inject member's current `Adaptive_Plan` summary as system context (not user-visible); maintain last 5 messages in Redis per session; enqueue `llm-jobs`
     - `GET /coach/chat/history`: return last 5 messages
     - _Requirements: 8.1, 8.4_
@@ -429,7 +429,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 35: Conversational Context Window**
     - **Validates: Requirements 8.4**
 
-  - [ ] 22.3 Implement low-confidence coach referral
+  - [x] 22.3 Implement low-confidence coach referral
     - After LLM response: if `confidence_score < 60`, set `uncertainty_acknowledged = TRUE`, `coach_referral_offered = TRUE` in response; surface marketplace CTA in UI
     - _Requirements: 8.2_
 
@@ -437,7 +437,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 34: Low-Confidence Coach Referral**
     - **Validates: Requirements 8.2**
 
-  - [ ] 22.5 Implement exception plan generation and approval flow
+  - [x] 22.5 Implement exception plan generation and approval flow
     - On travel/exception query: enqueue LLM job for modified plan variant; present to member for approval; on approval update `adaptive_plans.plan_data`, write to `plan_modification_log` with `triggered_by_query` and `modified_at`
     - Medical advice guard: LLM system prompt includes hard constraint against diagnoses/prescriptions
     - _Requirements: 8.3, 8.5, 8.6_
@@ -447,17 +447,17 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 8.5**
 
 
-- [ ] 23. Coach marketplace module — profiles, bookings, and escrow
-  - [ ] 23.1 Implement coach listing and profile endpoints
+- [x] 23. Coach marketplace module — profiles, bookings, and escrow
+  - [x] 23.1 Implement coach listing and profile endpoints
     - `GET /coaches`: filter by specialisation, rating, price; paginate; return credentials, rating_avg, availability calendar, session_fee_kes, is_verified badge
     - `GET /coaches/{id}`: full profile with cancellation_policy
     - _Requirements: 9.1_
 
-  - [ ] 23.2 Implement coach verification badge workflow
+  - [x] 23.2 Implement coach verification badge workflow
     - `POST /coaches/verify` (admin): set `is_verified = TRUE` after government ID + qualification doc check; display "Verified" badge
     - _Requirements: 9.5_
 
-  - [ ] 23.3 Implement session booking and escrow payment
+  - [x] 23.3 Implement session booking and escrow payment
     - `POST /bookings`: deduct session fee via `PaymentModule` (escrow sub-account), insert `coach_bookings (status=pending)`, confirm to both parties
     - Cron job: at `scheduled_at + duration + buffer`, check `escrow_released = FALSE` for completed sessions; deduct commission (10–15%); transfer net to coach Paystack sub-account; set `escrow_released = TRUE`
     - _Requirements: 9.2, 9.4_
@@ -466,7 +466,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 37: Commission Range Enforcement**
     - **Validates: Requirements 9.4**
 
-  - [ ] 23.5 Implement cancellation refund logic
+  - [x] 23.5 Implement cancellation refund logic
     - `POST /bookings/{id}/cancel`: if >24h before session → 100% refund via Paystack refund API within 5 business days; if ≤24h → apply `coach.cancellation_policy.refund_pct`; notify both parties
     - _Requirements: 9.6, 9.7_
 
@@ -478,17 +478,17 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 39: Late Cancellation Policy Compliance**
     - **Validates: Requirements 9.7**
 
-  - [ ] 23.8 Implement session rating and review submission
+  - [x] 23.8 Implement session rating and review submission
     - `POST /bookings/{id}/review`: prompt within 24h of session end; validate 1–5 stars; update `coaches.rating_avg`; set `review_submitted = TRUE`
     - _Requirements: 9.3_
 
-  - [ ] 23.9 Implement coach earnings dashboard with transparent commission display
+  - [x] 23.9 Implement coach earnings dashboard with transparent commission display
     - Show commission_pct and deductions per transaction before and after payout
     - _Requirements: 9.8_
 
 
-- [ ] 24. Gym owner module — dashboard, QR management, and challenges
-  - [ ] 24.1 Implement gym analytics aggregator cron job
+- [x] 24. Gym owner module — dashboard, QR management, and challenges
+  - [x] 24.1 Implement gym analytics aggregator cron job
     - Hourly job: query `workout_logs`, `meal_logs`, `plan_sessions` for each gym's member cohort; compute `total_active_members`, `avg_plan_completion_pct`, `avg_weekly_sessions`, `top_exercises`, `session_heatmap`, `at_risk_member_count`, `at_risk_member_ids`; upsert `gym_analytics_snapshots`
     - At-risk flag: any member with no `workout_logs` in last 7 calendar days
     - Privacy: store only member IDs in `at_risk_member_ids`, not any NCD or health data
@@ -502,16 +502,16 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 33: Health Data Exclusion from Dashboard**
     - **Validates: Requirements 7.8**
 
-  - [ ] 24.4 Implement gym dashboard API endpoint
+  - [x] 24.4 Implement gym dashboard API endpoint
     - `GET /gym/dashboard`: read from `gym_analytics_snapshots` (max 1h old); support date range filter; respond within 3s
     - Require gym_owner JWT role; no individual NCD/biometric data in response
     - _Requirements: 7.1, 7.2, 7.3, 7.8_
 
-  - [ ] 24.5 Implement QR code generation and download endpoint
+  - [x] 24.5 Implement QR code generation and download endpoint
     - `GET /gym/qr-code`: generate unique QR code for gym (encode `qr_code_token`), upload PNG to S3, return pre-signed URL for PNG and PDF variants
     - _Requirements: 7.6_
 
-  - [ ] 24.6 Implement cohort challenge creation and leaderboard
+  - [x] 24.6 Implement cohort challenge creation and leaderboard
     - `POST /gym/challenges`: create challenge, enrol all consenting members linked to gym in `challenge_enrolments`
     - `GET /gym/challenges/{id}/leaderboard`: live leaderboard from aggregated logs
     - _Requirements: 7.7_
@@ -520,7 +520,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 32: Challenge Enrolment Coverage**
     - **Validates: Requirements 7.7**
 
-  - [ ] 24.8 Implement monthly engagement report generation
+  - [x] 24.8 Implement monthly engagement report generation
     - `POST /gym/reports/monthly`: enqueue `report-jobs` Bull job; worker queries `gym_analytics_snapshots`, renders Handlebars HTML template, Puppeteer generates PDF, uploads to S3; email pre-signed URL via SendGrid within 60s
     - _Requirements: 7.9_
 
@@ -528,14 +528,14 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
 - [ ] 25. Checkpoint — Gym dashboard and marketplace verification
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 26. Plan export system — PDF and DOCX generation
-  - [ ] 26.1 Implement DOCX export worker using `docx` npm library
+- [x] 26. Plan export system — PDF and DOCX generation
+  - [x] 26.1 Implement DOCX export worker using `docx` npm library
     - Enqueue `export-jobs` on plan unlock; worker: fetch `adaptive_plans.plan_data`, map to `docx` section objects (heading styles for week/day, table objects for sets/reps, paragraph objects for meals + macros), apply PHYZIQ brand header/footer
     - Compute SHA-256 content hash of canonical JSON; store in `plan_exports.content_hash`
     - Upload to S3 `exports/{member_id}/{plan_id}/plan.docx` with server-side AES-256
     - _Requirements: 12.1, 12.2, 12.3_
 
-  - [ ] 26.2 Implement PDF export worker using Puppeteer
+  - [x] 26.2 Implement PDF export worker using Puppeteer
     - Render DOCX → Handlebars HTML template → Puppeteer PDF; upload to S3; insert `plan_exports` record with `expires_at = NOW() + 90 days`, `is_valid = TRUE`
     - _Requirements: 12.1, 12.2, 12.3_
 
@@ -543,7 +543,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 45: Export Content Completeness**
     - **Validates: Requirements 12.2**
 
-  - [ ] 26.4 Implement export download endpoint with pre-signed URL
+  - [x] 26.4 Implement export download endpoint with pre-signed URL
     - `GET /plans/{id}/export/{format}`: check `is_paid`, check `is_valid`, check `expires_at`; return pre-signed S3 URL (TTL 1h) without regenerating if within 90-day window
     - _Requirements: 5.8, 12.1, 12.5_
 
@@ -551,7 +551,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 47: Export Retention Period**
     - **Validates: Requirements 12.5**
 
-  - [ ] 26.6 Implement export invalidation on plan version increment
+  - [x] 26.6 Implement export invalidation on plan version increment
     - When `adaptive_plans.version` increments: set `is_valid = FALSE` on all linked `plan_exports` records immediately; enqueue new export jobs; make updated exports available within 30s
     - _Requirements: 12.4_
 
@@ -564,13 +564,13 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Validates: Requirements 12.6**
 
 
-- [ ] 27. Offline-first mobile sync module
-  - [ ] 27.1 Implement Expo SQLite offline schema and write-through layer
+- [x] 27. Offline-first mobile sync module
+  - [x] 27.1 Implement Expo SQLite offline schema and write-through layer
     - Create `offline_workout_logs`, `offline_meal_logs`, `cached_plans` tables in Expo SQLite
     - All mobile writes go to SQLite first (`synced_at = NULL`), then attempt server POST if online
     - _Requirements: 10.1, 10.2_
 
-  - [ ] 27.2 Implement background sync worker (React Native)
+  - [x] 27.2 Implement background sync worker (React Native)
     - On connectivity detected (via Expo `NetInfo`): fetch all SQLite records where `synced_at IS NULL`; batch POST to `POST /sync`; on success set `synced_at = NOW()`; on `409 Conflict` apply local-wins, set `has_conflict = TRUE`, notify user
     - Sync must complete within 5 minutes of connectivity restoration
     - _Requirements: 10.3, 10.4_
@@ -579,7 +579,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 21: Offline Log Sync Round-Trip**
     - **Validates: Requirements 4.7, 10.2**
 
-  - [ ] 27.4 Implement offline cache eviction job
+  - [x] 27.4 Implement offline cache eviction job
     - Nightly local job: `DELETE FROM offline_workout_logs WHERE logged_at < datetime('now', '-30 days')`; same for `offline_meal_logs` and `cached_plans`
     - _Requirements: 10.5_
 
@@ -587,7 +587,7 @@ This plan implements the PHYZIQ platform end-to-end using a TypeScript monorepo 
     - **Property 40: Offline Cache Age Limit**
     - **Validates: Requirements 10.5**
 
-  - [ ] 27.6 Implement low-bandwidth adaptive content serving
+  - [x] 27.6 Implement low-bandwidth adaptive content serving
     - Detect throughput via `NetInfo` Expo API; when < 256kbps, replace image URLs in plan responses with `/img/thumb/` low-res CDN variants; defer non-essential background fetches
     - Server-side: `POST /sync` and `GET /plans` responses gzip/Brotli compressed
     - _Requirements: 10.6, 10.7_

@@ -26,6 +26,14 @@ import { errorHandler } from './middleware/error-handler.js';
 import { authRouter } from './modules/auth/index.js';
 import { onboardingRouter } from './modules/onboarding/index.js';
 import { consentRouter } from './modules/consent/index.js';
+import { logsRouter } from './modules/logs/logs.router.js';
+import { plansRouter } from './modules/plans/index.js';
+import { paymentsRouter } from './modules/payments/index.js';
+import { marketplaceRouter } from './modules/marketplace/index.js';
+import { coachRouter } from './modules/coach/index.js';
+import { gymsRouter } from './modules/gyms/index.js';
+import { exportsRouter } from './modules/exports/index.js';
+import { syncRouter } from './modules/sync/index.js';
 
 const CORS_ALLOWLIST = [
   'https://phyziq.com',
@@ -73,6 +81,14 @@ export function createApp(): express.Application {
   app.use('/auth', authRouter);
   app.use('/onboarding', onboardingRouter);
   app.use('/members/me/consent', consentRouter);
+  app.use('/logs', logsRouter);
+  app.use('/plans', plansRouter);
+  app.use('/payments', paymentsRouter);
+  app.use('/marketplace', marketplaceRouter);
+  app.use('/coach', coachRouter);
+  app.use('/gyms', gymsRouter);
+  app.use('/exports', exportsRouter);
+  app.use('/sync', syncRouter);
 
   // ── 8. Global error handler ───────────────────────────────────────────
   // Must be registered after all routes. Express identifies error middleware
